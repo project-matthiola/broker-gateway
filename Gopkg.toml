@@ -32,3 +32,23 @@
 [[constraint]]
   name = "github.com/quickfixgo/quickfix"
   version = "0.6.0"
+
+[[constraint]]
+  name = "github.com/jinzhu/gorm"
+  version = "1.9.1"
+
+[[constraint]]
+  name = "github.com/go-sql-driver/mysql"
+  version = "1.3.0"
+
+[[constraint]]
+  name = "github.com/gin-gonic/gin"
+  version = "0.5.0"
+
+[[constraint]]
+  name = "github.com/satori/go.uuid"
+  version = "1.2.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/quickfixgo/fix50sp2"

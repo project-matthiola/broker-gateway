@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/quickfixgo/fix50sp2"
+  packages = ["."]
+  revision = "aacf4747f57a91907ea6bec6d312382c599f47df"
+
+[[projects]]
   name = "github.com/quickfixgo/quickfix"
   packages = [
     ".",
@@ -14,6 +20,12 @@
   version = "v0.6.0"
 
 [[projects]]
+  name = "github.com/satori/go.uuid"
+  packages = ["."]
+  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
+  version = "v1.2.0"
+
+[[projects]]
   name = "github.com/shopspring/decimal"
   packages = ["."]
   revision = "69b3a8ad1f5f2c8bd855cb6506d18593064a346b"
@@ -22,6 +34,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "daa0e9a8b8b39c478776ccc0f13aa8c3c4c78287d4597b2684a54c8e75802dda"
+  inputs-digest = "f763b321a9c4abefb5092085e668d49392760e692972c30e2c4d54168c8f5067"
   solver-name = "gps-cdcl"
   solver-version = 1
