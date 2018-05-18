@@ -3,9 +3,27 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/quickfixgo/fix50sp2"
+  name = "github.com/quickfixgo/enum"
   packages = ["."]
+  revision = "2cbed3730c3e92412b9a346fe45b5ddb1a9393da"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/quickfixgo/field"
+  packages = ["."]
+  revision = "74cea5ec78c70d357fb1ca68dfb26e299a28bbd0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/quickfixgo/fix50sp2"
+  packages = ["newordersingle"]
   revision = "aacf4747f57a91907ea6bec6d312382c599f47df"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/quickfixgo/fixt11"
+  packages = ["."]
+  revision = "d9788ca97f5dc3ec16c4dfdc6e05f201385d88ee"
 
 [[projects]]
   name = "github.com/quickfixgo/quickfix"
@@ -18,6 +36,12 @@
   ]
   revision = "90abc7fbcb82e4f15f75a593ea947667810c019e"
   version = "v0.6.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/quickfixgo/tag"
+  packages = ["."]
+  revision = "cbb4657605213a387c5ec1534192671a92c825c3"
 
 [[projects]]
   name = "github.com/satori/go.uuid"
@@ -34,6 +58,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f763b321a9c4abefb5092085e668d49392760e692972c30e2c4d54168c8f5067"
+  inputs-digest = "ef19d754a9448478800248675a57cff9066689fcd2a5adac54229359912da957"
   solver-name = "gps-cdcl"
   solver-version = 1

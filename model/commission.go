@@ -1,9 +1,11 @@
 package model
 
+// Commission represents a service charge assessed by a broker or investment advisor in return for providing investment
+// advice and/or handling the purchase or sale of a security.
 type Commission struct {
-	CommissionId int
-	FirmId int
-	FuturesId int
-	OrderType int
-	percentage int
+	CommissionID int
+	FirmID       int
+	FuturesID    int
+	OrderType    int
+	Percentage   int
 }
