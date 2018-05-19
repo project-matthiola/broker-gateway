@@ -31,7 +31,7 @@
 
 [[constraint]]
   name = "github.com/quickfixgo/quickfix"
-  version = "0.6.0"
+  branch = "master"
 
 [[constraint]]
   branch = "master"

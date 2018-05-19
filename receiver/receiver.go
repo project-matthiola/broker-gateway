@@ -1,10 +1,14 @@
 package receiver
 
 import (
+	"github.com/quickfixgo/enum"
 	"github.com/quickfixgo/fix50sp2/newordersingle"
 	"github.com/quickfixgo/quickfix"
 	"github.com/rudeigerc/broker-gateway/model"
 	"github.com/satori/go.uuid"
+
+	"log"
+	"strconv"
 )
 
 type Receiver struct {
@@ -39,7 +43,7 @@ func (r *Receiver) FromApp(msg *quickfix.Message, sessionID quickfix.SessionID) 
 
 func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID quickfix.SessionID) (err quickfix.MessageRejectError) {
 
-	orderType, err := msg.GetOrdType()
+	ordType, err := msg.GetOrdType()
 	if err != nil {
 		return err
 	}
@@ -49,7 +53,7 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 		return err
 	}
 
-	futuresID, err := msg.GetProductComplex()
+	futuresID, err := msg.GetSymbol()
 	if err != nil {
 		return err
 	}
@@ -69,19 +73,31 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 		return err
 	}
 
-	price, err := msg.GetPrice()
+	price, _ := msg.GetPrice()
+
+	createdAt, err := msg.GetTransactTime()
 	if err != nil {
 		return err
 	}
 
-	createdAt, err := msg.GetSendingTime()
-	if err != nil {
-		return err
-	}
+	firmIDInt, _ := strconv.Atoi(firmID)
 
 	order := model.Order{
-		OrderID: uuid.NewV1(),
+		OrderID:      uuid.NewV1(),
+		OrderType:    string(ordType),
+		Side:         string(side),
+		FuturesID:    futuresID,
+		FirmID:       firmIDInt,
+		TraderName:   traderName,
+		Quantity:     quantity,
+		OpenQuantity: quantity,
+		Price:        price,
+		Status:       string(enum.OrdStatus_NEW),
+		CreatedAt:    createdAt,
+		UpdatedAt:    createdAt,
 	}
+
+	log.Print(order)
 
 	quickfix.SendToTarget(msg, sessionID)
 	return

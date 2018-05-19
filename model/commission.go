@@ -5,7 +5,7 @@ package model
 type Commission struct {
 	CommissionID int
 	FirmID       int
-	FuturesID    int
-	OrderType    int
+	FuturesID    string
+	OrderType    string
 	Percentage   int
 }

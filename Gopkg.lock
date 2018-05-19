@@ -26,16 +26,15 @@
   revision = "d9788ca97f5dc3ec16c4dfdc6e05f201385d88ee"
 
 [[projects]]
+  branch = "master"
   name = "github.com/quickfixgo/quickfix"
   packages = [
     ".",
     "config",
     "datadictionary",
-    "enum",
     "internal"
   ]
-  revision = "90abc7fbcb82e4f15f75a593ea947667810c019e"
-  version = "v0.6.0"
+  revision = "cd0ed3f02563230e0d3eda29de8825b297f19706"
 
 [[projects]]
   branch = "master"
@@ -50,14 +49,14 @@
   version = "v1.2.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/shopspring/decimal"
   packages = ["."]
-  revision = "69b3a8ad1f5f2c8bd855cb6506d18593064a346b"
-  version = "1.0.1"
+  revision = "2df3e6ddaf6e9531dd02d7b6337f2d310f5e4f22"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ef19d754a9448478800248675a57cff9066689fcd2a5adac54229359912da957"
+  inputs-digest = "40a947300e4798d098a42a8b8eee22a3ea18caddd93d7d2fed7d1781deda6da1"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -10,15 +10,15 @@ import (
 // Order represents an investor's instructions to a broker or brokerage firm to purchase or sell a security.
 type Order struct {
 	OrderID      uuid.UUID
-	OrderType    int
-	Side         int
-	FuturesID    int
+	OrderType    string
+	Side         string
+	FuturesID    string
 	FirmID       int
 	TraderName   string
-	Quantity     int
-	OpenQuantity int
+	Quantity     decimal.Decimal
+	OpenQuantity decimal.Decimal
 	Price        decimal.Decimal
-	Status       int
+	Status       string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
