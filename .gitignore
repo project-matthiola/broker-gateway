@@ -21,3 +21,5 @@ gen
 ## dep
 vendor
 
+# Log
+tmp

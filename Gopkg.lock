@@ -16,7 +16,11 @@
 [[projects]]
   branch = "master"
   name = "github.com/quickfixgo/fix50sp2"
-  packages = ["newordersingle"]
+  packages = [
+    "executionreport",
+    "newordersingle",
+    "ordercancelrequest"
+  ]
   revision = "aacf4747f57a91907ea6bec6d312382c599f47df"
 
 [[projects]]
@@ -57,6 +61,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "40a947300e4798d098a42a8b8eee22a3ea18caddd93d7d2fed7d1781deda6da1"
+  inputs-digest = "58d2125ae49957442d6c09b24d96cd71ea9b81e114a14ecceda13f0ee3a0a1f6"
   solver-name = "gps-cdcl"
   solver-version = 1

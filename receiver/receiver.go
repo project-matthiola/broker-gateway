@@ -1,46 +1,61 @@
 package receiver
 
 import (
+	"log"
+	"strconv"
+
 	"github.com/quickfixgo/enum"
+	"github.com/quickfixgo/field"
+	"github.com/quickfixgo/fix50sp2/executionreport"
 	"github.com/quickfixgo/fix50sp2/newordersingle"
+	"github.com/quickfixgo/fix50sp2/ordercancelrequest"
 	"github.com/quickfixgo/quickfix"
 	"github.com/rudeigerc/broker-gateway/model"
 	"github.com/satori/go.uuid"
-
-	"log"
-	"strconv"
+	"github.com/shopspring/decimal"
 )
 
+// Receiver implements the quickfix.Application interface.
 type Receiver struct {
 	*quickfix.MessageRouter
 }
 
+// NewReceiver returns a new receiver.
 func NewReceiver() *Receiver {
 	r := &Receiver{
 		MessageRouter: quickfix.NewMessageRouter(),
 	}
 	r.AddRoute(newordersingle.Route(r.OnNewOrderSingle))
+	r.AddRoute(ordercancelrequest.Route(r.OnOrderCancelRequest))
 	return r
 }
 
+// OnCreate implemented as part of Application interface.
 func (r Receiver) OnCreate(sessionID quickfix.SessionID) { return }
 
+// OnLogon implemented as part of Application interface.
 func (r Receiver) OnLogon(sessionID quickfix.SessionID) { return }
 
+// OnLogout implemented as part of Application interface.
 func (r Receiver) OnLogout(sessionID quickfix.SessionID) { return }
 
+// ToAdmin implemented as part of Application interface.
 func (r Receiver) ToAdmin(msg *quickfix.Message, sessionID quickfix.SessionID) { return }
 
+// ToApp implemented as part of Application interface.
 func (r Receiver) ToApp(msg *quickfix.Message, sessionID quickfix.SessionID) error { return nil }
 
+// FromAdmin implemented as part of Application interface
 func (r Receiver) FromAdmin(msg *quickfix.Message, sessionID quickfix.SessionID) quickfix.MessageRejectError {
 	return nil
 }
 
+// FromApp implemented as part of Application interface, uses Router on incoming application messages.
 func (r *Receiver) FromApp(msg *quickfix.Message, sessionID quickfix.SessionID) (reject quickfix.MessageRejectError) {
 	return r.Route(msg, sessionID)
 }
 
+// OnNewOrderSingle handles the NewOrderSingle.
 func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID quickfix.SessionID) (err quickfix.MessageRejectError) {
 
 	ordType, err := msg.GetOrdType()
@@ -81,9 +96,10 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 	}
 
 	firmIDInt, _ := strconv.Atoi(firmID)
+	orderID := uuid.NewV1()
 
 	order := model.Order{
-		OrderID:      uuid.NewV1(),
+		OrderID:      orderID,
 		OrderType:    string(ordType),
 		Side:         string(side),
 		FuturesID:    futuresID,
@@ -99,6 +115,43 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 
 	log.Print(order)
 
-	quickfix.SendToTarget(msg, sessionID)
-	return
+	execReport := executionreport.New(
+		field.NewOrderID(order.OrderID.String()),
+		field.NewExecID(uuid.NewV1().String()),
+		field.NewExecType(enum.ExecType(enum.OrdStatus_NEW)),
+		field.NewOrdStatus(enum.OrdStatus_NEW),
+		field.NewSide(side),
+		field.NewLeavesQty(order.OpenQuantity, 2),
+		field.NewCumQty(decimal.Zero, 2),
+	)
+
+	execReport.SetOrderQty(order.Quantity, 2)
+
+	quickfix.SendToTarget(execReport, sessionID)
+	return nil
+}
+
+func (r *Receiver) OnOrderCancelRequest(msg ordercancelrequest.OrderCancelRequest, sessionID quickfix.SessionID) quickfix.MessageRejectError {
+
+	orderID, err := msg.GetOrderID()
+	if err != nil {
+		return err
+	}
+
+	symbol, err := msg.GetSymbol()
+	if err != nil {
+		return err
+	}
+
+	orderUUID, _ := uuid.FromString(orderID)
+
+	order := model.Order{
+		OrderID:   orderUUID,
+		OrderType: string(enum.OrdType_COUNTER_ORDER_SELECTION),
+		FuturesID: symbol,
+	}
+
+	log.Print(order)
+
+	return nil
 }
