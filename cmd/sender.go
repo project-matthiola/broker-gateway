@@ -1,12 +1,10 @@
 package main
 
 import (
-	"log"
-
 	"flag"
+	"log"
 	"os"
 	"path"
-
 	"time"
 
 	"github.com/quickfixgo/enum"

@@ -4,6 +4,7 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/nsqio/go-nsq"
 	"github.com/quickfixgo/enum"
 	"github.com/quickfixgo/field"
 	"github.com/quickfixgo/fix50sp2/executionreport"
@@ -13,17 +14,35 @@ import (
 	"github.com/rudeigerc/broker-gateway/model"
 	"github.com/satori/go.uuid"
 	"github.com/shopspring/decimal"
+	"github.com/spf13/viper"
 )
 
 // Receiver implements the quickfix.Application interface.
 type Receiver struct {
 	*quickfix.MessageRouter
+	producer *nsq.Producer
 }
 
 // NewReceiver returns a new receiver.
 func NewReceiver() *Receiver {
+	viper.SetConfigName("config")
+	viper.AddConfigPath("config")
+	viper.SetConfigType("toml")
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatalf("Fatal error config file: %s \n", err)
+	}
+
+	nsqAddr := viper.GetString("nsq.host") + ":" + viper.GetString("nsq.port")
+	producer, err := nsq.NewProducer(nsqAddr, nsq.NewConfig())
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	r := &Receiver{
 		MessageRouter: quickfix.NewMessageRouter(),
+		producer:      producer,
 	}
 	r.AddRoute(newordersingle.Route(r.OnNewOrderSingle))
 	r.AddRoute(ordercancelrequest.Route(r.OnOrderCancelRequest))
@@ -57,7 +76,6 @@ func (r *Receiver) FromApp(msg *quickfix.Message, sessionID quickfix.SessionID) 
 
 // OnNewOrderSingle handles the NewOrderSingle.
 func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID quickfix.SessionID) (err quickfix.MessageRejectError) {
-
 	ordType, err := msg.GetOrdType()
 	if err != nil {
 		return err
@@ -113,7 +131,8 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 		UpdatedAt:    createdAt,
 	}
 
-	log.Print(order)
+	marshaled, _ := order.Marshal()
+	r.producer.Publish("matthiola", marshaled)
 
 	execReport := executionreport.New(
 		field.NewOrderID(order.OrderID.String()),
@@ -132,7 +151,6 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 }
 
 func (r *Receiver) OnOrderCancelRequest(msg ordercancelrequest.OrderCancelRequest, sessionID quickfix.SessionID) quickfix.MessageRejectError {
-
 	orderID, err := msg.GetOrderID()
 	if err != nil {
 		return err

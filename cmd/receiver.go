@@ -2,11 +2,10 @@ package main
 
 import (
 	"flag"
+	"log"
 	"os"
 	"os/signal"
 	"path"
-
-	"log"
 
 	"github.com/quickfixgo/quickfix"
 	"github.com/rudeigerc/broker-gateway/receiver"
