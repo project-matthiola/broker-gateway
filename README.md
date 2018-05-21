@@ -5,8 +5,12 @@ The broker gateway of project **Matthiola**, a distributed commodities OTC elect
 ## Architecture
 
 - Receiver
+- Matcher
 - Executor
 - Server
+  - Router
+  - Service
+  - Mapper
 
 ## Build
 
@@ -49,8 +53,16 @@ Usage:
 
 Available Commands:
   help        Help about any command
+  matcher     Run matcher
   receiver    Run receiver
   sender      Run sender
+  server      Run server
+
+Flags:
+  -c, --config string   config file (default "config/config.toml")
+  -h, --help            help for broker-gateway
+
+Use "broker-gateway [command] --help" for more information about a command.
 ```
 
 ## License

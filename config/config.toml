@@ -11,3 +11,9 @@
   port = 3306
   user = "root"
   password = ""
+
+[http]
+  port = 8080
+
+[auth]
+  secret = "matthiola"

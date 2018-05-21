@@ -32,6 +32,7 @@ func init() {
 	rootCmd.AddCommand(receiverCmd)
 	rootCmd.AddCommand(senderCmd)
 	rootCmd.AddCommand(matcherCmd)
+	rootCmd.AddCommand(serverCmd)
 
 	viper.SetDefault("author", "rudeigerc <rudeigerc@gmail.com>")
 	viper.SetDefault("license", "MIT")
