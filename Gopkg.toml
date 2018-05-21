@@ -34,8 +34,8 @@
   branch = "master"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/quickfixgo/fix50sp2"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/jinzhu/gorm"
@@ -62,5 +62,5 @@
   version = "1.0.2"
 
 [[constraint]]
-  name = "github.com/fatih/structs"
-  version = "1.0.0"
+  name = "github.com/spf13/cobra"
+  version = "0.0.3"

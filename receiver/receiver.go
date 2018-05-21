@@ -20,20 +20,11 @@ import (
 // Receiver implements the quickfix.Application interface.
 type Receiver struct {
 	*quickfix.MessageRouter
-	producer *nsq.Producer
+	*nsq.Producer
 }
 
 // NewReceiver returns a new receiver.
 func NewReceiver() *Receiver {
-	viper.SetConfigName("config")
-	viper.AddConfigPath("config")
-	viper.SetConfigType("toml")
-
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Fatalf("Fatal error config file: %s \n", err)
-	}
-
 	nsqAddr := viper.GetString("nsq.host") + ":" + viper.GetString("nsq.port")
 	producer, err := nsq.NewProducer(nsqAddr, nsq.NewConfig())
 	if err != nil {
@@ -42,7 +33,7 @@ func NewReceiver() *Receiver {
 
 	r := &Receiver{
 		MessageRouter: quickfix.NewMessageRouter(),
-		producer:      producer,
+		Producer:      producer,
 	}
 	r.AddRoute(newordersingle.Route(r.OnNewOrderSingle))
 	r.AddRoute(ordercancelrequest.Route(r.OnOrderCancelRequest))
@@ -132,7 +123,7 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 	}
 
 	marshaled, _ := order.Marshal()
-	r.producer.Publish("matthiola", marshaled)
+	r.Publish(viper.GetString("nsq.topic"), marshaled)
 
 	execReport := executionreport.New(
 		field.NewOrderID(order.OrderID.String()),

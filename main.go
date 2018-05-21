@@ -1,7 +1,7 @@
 package main
 
-import "log"
+import "github.com/rudeigerc/broker-gateway/cmd"
 
 func main() {
-	log.Println("main")
+	cmd.Execute()
 }

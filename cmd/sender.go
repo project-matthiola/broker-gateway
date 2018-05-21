@@ -1,7 +1,6 @@
-package main
+package cmd
 
 import (
-	"flag"
 	"log"
 	"os"
 	"path"
@@ -13,7 +12,68 @@ import (
 	"github.com/quickfixgo/quickfix"
 	"github.com/satori/go.uuid"
 	"github.com/shopspring/decimal"
+	"github.com/spf13/cobra"
 )
+
+var senderCmd = &cobra.Command{
+	Use:   "sender",
+	Short: "Run sender",
+	Long:  "Run sender",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfgFileName := path.Join("config", "sender.cfg")
+
+		cfg, err := os.Open(cfgFileName)
+		if err != nil {
+			log.Printf("Error opening %v, %v\n", cfgFileName, err)
+			return
+		}
+
+		appSettings, err := quickfix.ParseSettings(cfg)
+		if err != nil {
+			log.Println("Error reading cfg,", err)
+			return
+		}
+
+		app := Sender{}
+		fileLogFactory, err := quickfix.NewFileLogFactory(appSettings)
+
+		if err != nil {
+			log.Println("Error creating file log factory,", err)
+			return
+		}
+
+		initiator, err := quickfix.NewInitiator(app, quickfix.NewMemoryStoreFactory(), appSettings, fileLogFactory)
+		if err != nil {
+			log.Printf("Unable to create Initiator: %s\n", err)
+			return
+		}
+
+		initiator.Start()
+
+		for {
+			clOrdID := field.NewClOrdID(uuid.NewV1().String())
+			side := field.NewSide(enum.Side_BUY)
+			transacttime := field.NewTransactTime(time.Now())
+			ordtype := field.NewOrdType(enum.OrdType_MARKET)
+
+			order := newordersingle.New(clOrdID, side, transacttime, ordtype)
+			order.SetSenderCompID("Trader")
+			order.SetSenderSubID("John Doe")
+			order.SetTargetCompID("Broker")
+			order.SetSymbol("GC_SEP18")
+			order.SetOrderQty(decimal.NewFromFloat(23.14), 2)
+			msg := order.ToMessage()
+
+			err := quickfix.Send(msg)
+			if err != nil {
+				log.Println(err)
+				break
+			}
+		}
+
+		initiator.Stop()
+	},
+}
 
 type Sender struct {
 }
@@ -45,64 +105,4 @@ func (r Sender) FromAdmin(msg *quickfix.Message, sessionID quickfix.SessionID) q
 func (r Sender) FromApp(msg *quickfix.Message, sessionID quickfix.SessionID) (reject quickfix.MessageRejectError) {
 	log.Printf("FromApp: %s\n", msg.String())
 	return nil
-}
-
-func main() {
-	flag.Parse()
-
-	cfgFileName := path.Join("config", "sender.cfg")
-	if flag.NArg() > 0 {
-		cfgFileName = flag.Arg(0)
-	}
-
-	cfg, err := os.Open(cfgFileName)
-	if err != nil {
-		log.Printf("Error opening %v, %v\n", cfgFileName, err)
-		return
-	}
-
-	appSettings, err := quickfix.ParseSettings(cfg)
-	if err != nil {
-		log.Println("Error reading cfg,", err)
-		return
-	}
-
-	app := Sender{}
-	fileLogFactory, err := quickfix.NewFileLogFactory(appSettings)
-
-	if err != nil {
-		log.Println("Error creating file log factory,", err)
-		return
-	}
-
-	initiator, err := quickfix.NewInitiator(app, quickfix.NewMemoryStoreFactory(), appSettings, fileLogFactory)
-	if err != nil {
-		log.Printf("Unable to create Initiator: %s\n", err)
-		return
-	}
-
-	initiator.Start()
-
-	for {
-		clOrdID := field.NewClOrdID(uuid.NewV1().String())
-		side := field.NewSide(enum.Side_BUY)
-		transacttime := field.NewTransactTime(time.Now())
-		ordtype := field.NewOrdType(enum.OrdType_MARKET)
-
-		order := newordersingle.New(clOrdID, side, transacttime, ordtype)
-		order.SetSenderCompID("Trader")
-		order.SetSenderSubID("John Doe")
-		order.SetTargetCompID("Broker")
-		order.SetSymbol("GC_SEP18")
-		order.SetOrderQty(decimal.NewFromFloat(23.14), 2)
-		msg := order.ToMessage()
-
-		err := quickfix.Send(msg)
-		if err != nil {
-			log.Println(err)
-			break
-		}
-	}
-
-	initiator.Stop()
 }

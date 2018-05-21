@@ -1,6 +1,7 @@
 [nsq]
   host = "127.0.0.1"
   port = 4150
+  topic = "matthiola"
 
 [mysql]
   host = "127.0.0.1"

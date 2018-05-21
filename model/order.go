@@ -1,11 +1,9 @@
 package model
 
 import (
-	"time"
-
 	"strconv"
-
 	"strings"
+	"time"
 
 	"github.com/satori/go.uuid"
 	"github.com/shopspring/decimal"

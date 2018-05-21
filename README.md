@@ -13,6 +13,8 @@ The broker gateway of project **Matthiola**, a distributed commodities OTC elect
 ```shell
 $ brew install dep
 $ dep ensure
+$ go build
+$ ./broker-gateway
 ```
 
 ### NSQ
@@ -38,6 +40,18 @@ $ nsqadmin --lookupd-http-address=127.0.0.1:4161
 ```
 
 - In a web browser open [`http://127.0.0.1:4171/`](http://127.0.0.1:4171/) to view the nsqadmin UI and see statistics.
+
+## Run
+
+```shell
+Usage:
+  broker-gateway [command]
+
+Available Commands:
+  help        Help about any command
+  receiver    Run receiver
+  sender      Run sender
+```
 
 ## License
 

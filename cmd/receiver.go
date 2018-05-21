@@ -1,7 +1,6 @@
-package main
+package cmd
 
 import (
-	"flag"
 	"log"
 	"os"
 	"os/signal"
@@ -9,45 +8,49 @@ import (
 
 	"github.com/quickfixgo/quickfix"
 	"github.com/rudeigerc/broker-gateway/receiver"
+	"github.com/spf13/cobra"
 )
 
-func main() {
-	flag.Parse()
+var receiverCmd = &cobra.Command{
+	Use:   "receiver",
+	Short: "Run receiver",
+	Long:  "Run receiver",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfgFileName := path.Join("config", "receiver.cfg")
 
-	cfgFileName := path.Join("config", "receiver.cfg")
-	if flag.NArg() > 0 {
-		cfgFileName = flag.Arg(0)
-	}
+		cfg, err := os.Open(cfgFileName)
+		if err != nil {
+			log.Printf("Error opening %v, %v\n", cfgFileName, err)
+			return
+		}
 
-	cfg, err := os.Open(cfgFileName)
-	if err != nil {
-		log.Printf("Error opening %v, %v\n", cfgFileName, err)
-		return
-	}
+		appSettings, err := quickfix.ParseSettings(cfg)
+		if err != nil {
+			log.Println("Error reading cfg,", err)
+			return
+		}
 
-	appSettings, err := quickfix.ParseSettings(cfg)
-	if err != nil {
-		log.Println("Error reading cfg,", err)
-		return
-	}
+		logFactory := quickfix.NewScreenLogFactory()
 
-	logFactory := quickfix.NewScreenLogFactory()
+		r := receiver.NewReceiver()
 
-	acceptor, err := quickfix.NewAcceptor(receiver.NewReceiver(), quickfix.NewMemoryStoreFactory(), appSettings, logFactory)
-	if err != nil {
-		log.Printf("Unable to create Acceptor: %s\n", err)
-		return
-	}
+		acceptor, err := quickfix.NewAcceptor(r, quickfix.NewMemoryStoreFactory(), appSettings, logFactory)
+		if err != nil {
+			log.Printf("Unable to create Acceptor: %s\n", err)
+			return
+		}
 
-	err = acceptor.Start()
-	if err != nil {
-		log.Printf("Unable to start Acceptor: %s\n", err)
-		return
-	}
+		err = acceptor.Start()
+		if err != nil {
+			log.Printf("Unable to start Acceptor: %s\n", err)
+			return
+		}
 
-	interrupt := make(chan os.Signal)
-	signal.Notify(interrupt, os.Interrupt, os.Kill)
-	<-interrupt
+		interrupt := make(chan os.Signal)
+		signal.Notify(interrupt, os.Interrupt, os.Kill)
+		<-interrupt
 
-	acceptor.Stop()
+		acceptor.Stop()
+		r.Stop()
+	},
 }

@@ -11,15 +11,18 @@ import (
 	"github.com/quickfixgo/quickfix"
 	"github.com/satori/go.uuid"
 	"github.com/shopspring/decimal"
+	"github.com/spf13/viper"
 )
 
 var receiver *Receiver
 
 func TestNewReceiver(t *testing.T) {
+	viper.AddConfigPath("../config")
 	receiver = NewReceiver()
 }
 
 func TestReceiver_OnNewOrderSingle(t *testing.T) {
+	viper.Set("nsq.topic", "test")
 
 	clOrdID := field.NewClOrdID(uuid.NewV1().String())
 	side := field.NewSide(enum.Side_BUY)
