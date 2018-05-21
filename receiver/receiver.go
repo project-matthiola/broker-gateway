@@ -25,7 +25,7 @@ type Receiver struct {
 
 // NewReceiver returns a new receiver.
 func NewReceiver() *Receiver {
-	nsqAddr := viper.GetString("nsq.host") + ":" + viper.GetString("nsq.port")
+	nsqAddr := viper.GetString("nsq.host") + ":" + viper.GetString("nsq.nsqd.port")
 	producer, err := nsq.NewProducer(nsqAddr, nsq.NewConfig())
 	if err != nil {
 		log.Fatal(err)

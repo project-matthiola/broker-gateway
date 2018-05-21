@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -21,7 +20,7 @@ var rootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		log.Fatalln(err)
 		os.Exit(1)
 	}
 }
@@ -29,9 +28,10 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "config/config.toml", "config file")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "config/config.toml", "config file")
 	rootCmd.AddCommand(receiverCmd)
 	rootCmd.AddCommand(senderCmd)
+	rootCmd.AddCommand(matcherCmd)
 
 	viper.SetDefault("author", "rudeigerc <rudeigerc@gmail.com>")
 	viper.SetDefault("license", "MIT")
