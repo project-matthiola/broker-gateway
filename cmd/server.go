@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/rudeigerc/broker-gateway/server"
+	"github.com/rudeigerc/broker-gateway/handler"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -20,9 +20,13 @@ var serverCmd = &cobra.Command{
 
 		v1 := router.Group("/api/v1")
 		{
-			v1.GET("/status", server.StatusHandler)
-			v1.GET("/auth", server.ValidationHandler)
-			v1.POST("/auth", server.AuthHandler)
+			v1.GET("/status", handler.StatusHandler)
+
+			auth := v1.Group("/auth")
+			{
+				auth.GET("", handler.ValidationHandler)
+				auth.POST("", handler.AuthHandler)
+			}
 		}
 
 		router.Run(":" + viper.GetString("gin.port"))
