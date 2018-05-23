@@ -1,3 +1,10 @@
+[gin]
+  debug = true
+  port = 8080
+
+[auth]
+  secret = "matthiola"
+
 [nsq]
   host = "127.0.0.1"
   topic = "matthiola"
@@ -9,11 +16,6 @@
 [mysql]
   host = "127.0.0.1"
   port = 3306
+  database = "broker"
   user = "root"
   password = ""
-
-[http]
-  port = 8080
-
-[auth]
-  secret = "matthiola"

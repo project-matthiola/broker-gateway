@@ -34,6 +34,7 @@ func init() {
 	rootCmd.AddCommand(matcherCmd)
 	rootCmd.AddCommand(serverCmd)
 
+	viper.BindPFlags(rootCmd.PersistentFlags())
 	viper.SetDefault("author", "rudeigerc <rudeigerc@gmail.com>")
 	viper.SetDefault("license", "MIT")
 }

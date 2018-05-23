@@ -12,6 +12,10 @@ var serverCmd = &cobra.Command{
 	Short: "Run server",
 	Long:  "Run server",
 	Run: func(cmd *cobra.Command, args []string) {
+		if !viper.GetBool("gin.debug") {
+			gin.SetMode(gin.ReleaseMode)
+		}
+
 		router := gin.Default()
 
 		v1 := router.Group("/api/v1")
@@ -21,6 +25,12 @@ var serverCmd = &cobra.Command{
 			v1.POST("/auth", server.AuthHandler)
 		}
 
-		router.Run(":" + viper.GetString("http.port"))
+		router.Run(":" + viper.GetString("gin.port"))
 	},
+}
+
+func init() {
+	serverCmd.PersistentFlags().IntP("gin.port", "p", 8080, "port of server")
+
+	viper.BindPFlags(serverCmd.PersistentFlags())
 }
