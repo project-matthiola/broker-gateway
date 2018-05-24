@@ -48,7 +48,7 @@ func AuthHandler(c *gin.Context) {
 		}
 		c.JSON(http.StatusOK, gin.H{"data": res})
 	} else {
-		service.NewError(c, http.StatusBadRequest, "Invalid request message framing.")
+		ErrorHandler(c, http.StatusBadRequest, "Invalid request message framing.")
 	}
 }
 
@@ -74,5 +74,5 @@ func ValidationHandler(c *gin.Context) {
 		}
 	}
 
-	service.NewError(c, http.StatusUnauthorized, "Invalid token.")
+	ErrorHandler(c, http.StatusUnauthorized, "Invalid token.")
 }

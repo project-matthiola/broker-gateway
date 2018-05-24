@@ -3,9 +3,9 @@ package cmd
 import (
 	"log"
 	"os"
-	"os/signal"
 	"path"
 
+	"github.com/micro/go-micro"
 	"github.com/quickfixgo/quickfix"
 	"github.com/rudeigerc/broker-gateway/receiver"
 	"github.com/spf13/cobra"
@@ -46,11 +46,18 @@ var receiverCmd = &cobra.Command{
 			return
 		}
 
-		interrupt := make(chan os.Signal)
-		signal.Notify(interrupt, os.Interrupt, os.Kill)
-		<-interrupt
+		service := micro.NewService(
+			micro.Name("github.com.rudeigerc.broker-gateway.receiver"),
+			micro.BeforeStop(func() error {
+				acceptor.Stop()
+				r.Stop()
+				return nil
+			}),
+		)
 
-		acceptor.Stop()
-		r.Stop()
+		if err := service.Run(); err != nil {
+			log.Fatal(err)
+		}
+
 	},
 }

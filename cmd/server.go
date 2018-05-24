@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
+	"github.com/micro/go-web"
 	"github.com/rudeigerc/broker-gateway/handler"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -12,6 +15,7 @@ var serverCmd = &cobra.Command{
 	Short: "Run server",
 	Long:  "Run server",
 	Run: func(cmd *cobra.Command, args []string) {
+
 		if !viper.GetBool("gin.debug") {
 			gin.SetMode(gin.ReleaseMode)
 		}
@@ -29,12 +33,20 @@ var serverCmd = &cobra.Command{
 			}
 		}
 
-		router.Run(":" + viper.GetString("gin.port"))
+		service := web.NewService(
+			web.Name("github.com.rudeigerc.broker-gateway.server"),
+			web.Address(":"+viper.GetString("gin.port")),
+			web.Handler(router),
+		)
+
+		if err := service.Run(); err != nil {
+			log.Fatal(err)
+		}
 	},
 }
 
 func init() {
-	serverCmd.PersistentFlags().IntP("gin.port", "p", 8080, "port of server")
+	serverCmd.PersistentFlags().IntP("gin.port", "p", 8080, "port of HTTP server")
 
 	viper.BindPFlags(serverCmd.PersistentFlags())
 }

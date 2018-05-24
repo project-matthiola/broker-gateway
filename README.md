@@ -8,7 +8,7 @@ The broker gateway of project **Matthiola**, a distributed commodities OTC elect
 - Matcher
 - Executor
 - Server
-  - Router
+  - Handler
   - Service
   - Mapper
 
@@ -44,6 +44,17 @@ $ nsqadmin --lookupd-http-address=127.0.0.1:4161
 ```
 
 - In a web browser open [`http://127.0.0.1:4171/`](http://127.0.0.1:4171/) to view the nsqadmin UI and see statistics.
+
+## Service Discovery
+
+### Consul
+
+```shell
+$ brew install consul
+
+$ consul agent -dev
+```
+
 
 ## Run
 
