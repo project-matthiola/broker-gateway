@@ -7,10 +7,8 @@ The broker gateway of project **Matthiola**, a distributed commodities OTC elect
 - Receiver
 - Matcher
 - Executor
-- Server
-  - Handler
-  - Service
-  - Mapper
+- Server (HTTP Server)
+- Broadcaster (WebSocket Server)
 
 ## Build
 
@@ -20,6 +18,29 @@ $ dep ensure
 $ go build
 $ ./broker-gateway
 ```
+
+## Run
+
+```shell
+Usage:
+  broker-gateway [command]
+
+Available Commands:
+  broadcaster Run broadcaster
+  help        Help about any command
+  matcher     Run matcher
+  receiver    Run receiver
+  sender      Run sender
+  server      Run server
+
+Flags:
+  -c, --config string   config file (default "config/config.toml")
+  -h, --help            help for broker-gateway
+
+Use "broker-gateway [command] --help" for more information about a command.
+```
+
+## Requirement
 
 ### NSQ
 
@@ -51,29 +72,7 @@ $ nsqadmin --lookupd-http-address=127.0.0.1:4161
 
 ```shell
 $ brew install consul
-
 $ consul agent -dev
-```
-
-
-## Run
-
-```shell
-Usage:
-  broker-gateway [command]
-
-Available Commands:
-  help        Help about any command
-  matcher     Run matcher
-  receiver    Run receiver
-  sender      Run sender
-  server      Run server
-
-Flags:
-  -c, --config string   config file (default "config/config.toml")
-  -h, --help            help for broker-gateway
-
-Use "broker-gateway [command] --help" for more information about a command.
 ```
 
 ## License
