@@ -1,8 +1,6 @@
 package mapper
 
 import (
-	"log"
-
 	"github.com/jinzhu/gorm"
 )
 
@@ -11,13 +9,8 @@ type Mapper struct {
 }
 
 func NewMapper() *Mapper {
-	db, err := NewDB()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	return &Mapper{
-		db: db,
+		db: NewDB(),
 	}
 }
 

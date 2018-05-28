@@ -24,11 +24,7 @@ var (
 	Broadcast = make(chan Message)
 )
 
-func init() {
-	go handleBroadcast()
-}
-
-func handleBroadcast() {
+func HandleBroadcast() {
 	for {
 		msg := <-Broadcast
 
