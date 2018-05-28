@@ -33,6 +33,7 @@ func init() {
 	rootCmd.AddCommand(senderCmd)
 	rootCmd.AddCommand(matcherCmd)
 	rootCmd.AddCommand(serverCmd)
+	rootCmd.AddCommand(broadcasterCmd)
 
 	viper.BindPFlags(rootCmd.PersistentFlags())
 	viper.SetDefault("author", "rudeigerc <rudeigerc@gmail.com>")

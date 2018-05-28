@@ -13,9 +13,7 @@ type Error struct {
 }
 
 func StatusHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "Normal",
-	})
+	c.JSON(200, gin.H{"message": "Normal"})
 }
 
 func ErrorHandler(c *gin.Context, code int, message string) {

@@ -4,8 +4,10 @@ import (
 	"log"
 	"os"
 	"path"
+	"time"
 
 	"github.com/micro/go-micro"
+	"github.com/micro/go-plugins/broker/nsq"
 	"github.com/quickfixgo/quickfix"
 	"github.com/rudeigerc/broker-gateway/receiver"
 	"github.com/spf13/cobra"
@@ -33,6 +35,7 @@ var receiverCmd = &cobra.Command{
 		logFactory := quickfix.NewScreenLogFactory()
 
 		r := receiver.NewReceiver()
+		defer r.Stop()
 
 		acceptor, err := quickfix.NewAcceptor(r, quickfix.NewMemoryStoreFactory(), appSettings, logFactory)
 		if err != nil {
@@ -41,18 +44,19 @@ var receiverCmd = &cobra.Command{
 		}
 
 		err = acceptor.Start()
+		defer acceptor.Stop()
+
 		if err != nil {
 			log.Printf("Unable to start Acceptor: %s\n", err)
 			return
 		}
 
+		broker := nsq.NewBroker()
 		service := micro.NewService(
 			micro.Name("github.com.rudeigerc.broker-gateway.receiver"),
-			micro.BeforeStop(func() error {
-				acceptor.Stop()
-				r.Stop()
-				return nil
-			}),
+			micro.Broker(broker),
+			micro.RegisterTTL(time.Minute),
+			micro.RegisterInterval(time.Second*30),
 		)
 
 		if err := service.Run(); err != nil {

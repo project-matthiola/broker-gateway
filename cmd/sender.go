@@ -6,6 +6,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/micro/go-micro"
 	"github.com/quickfixgo/enum"
 	"github.com/quickfixgo/field"
 	"github.com/quickfixgo/fix50sp2/newordersingle"
@@ -49,6 +50,7 @@ var senderCmd = &cobra.Command{
 		}
 
 		initiator.Start()
+		defer initiator.Stop()
 
 		for {
 			clOrdID := field.NewClOrdID(uuid.NewV1().String())
@@ -71,7 +73,15 @@ var senderCmd = &cobra.Command{
 			}
 		}
 
-		initiator.Stop()
+		service := micro.NewService(
+			micro.Name("github.com.rudeigerc.broker-gateway.sender"),
+			micro.RegisterTTL(time.Minute),
+			micro.RegisterInterval(time.Second*30),
+		)
+
+		if err := service.Run(); err != nil {
+			log.Fatal(err)
+		}
 	},
 }
 

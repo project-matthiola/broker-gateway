@@ -84,12 +84,12 @@ func (o *Order) Unmarshal(buf []byte) error {
 
 	o.Status = a[9]
 
-	o.CreatedAt, err = time.Parse("2006-01-02 15:04:05.000 +0000 UTC", a[10])
+	o.CreatedAt, err = time.Parse("2006-01-02 15:04:05 +0000 UTC", a[10])
 	if err != nil {
 		return err
 	}
 
-	o.UpdatedAt, err = time.Parse("2006-01-02 15:04:05.000 +0000 UTC", a[11])
+	o.UpdatedAt, err = time.Parse("2006-01-02 15:04:05 +0000 UTC", a[11])
 	if err != nil {
 		return err
 	}
