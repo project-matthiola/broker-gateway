@@ -1,5 +1,7 @@
 # broker-gateway
 
+[![Build Status](https://travis-ci.com/rudeigerc/broker-gateway.svg?token=m9esAaP4YUBsZ2yN5xJq&branch=master)](https://travis-ci.com/rudeigerc/broker-gateway)
+
 The broker gateway of project **Matthiola**, a distributed commodities OTC electronic trading system, instructed by Morgan Stanley. 
 
 ## Architecture

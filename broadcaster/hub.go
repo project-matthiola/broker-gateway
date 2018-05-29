@@ -4,13 +4,12 @@ import (
 	"log"
 
 	"github.com/gorilla/websocket"
-	"github.com/shopspring/decimal"
 )
 
 type Data struct {
-	Bids  [][]decimal.Decimal `json:"bids"`
-	Asks  [][]decimal.Decimal `json:"asks"`
-	Level int                 `json:"level"`
+	Bids  [][]float64 `json:"bids"`
+	Asks  [][]float64 `json:"asks"`
+	Level int         `json:"level"`
 }
 
 type Message struct {

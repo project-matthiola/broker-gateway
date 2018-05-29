@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/micro/go-web"
+	"github.com/rudeigerc/broker-gateway/broadcaster"
 	"github.com/rudeigerc/broker-gateway/handler"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -18,6 +19,8 @@ var broadcasterCmd = &cobra.Command{
 		if !viper.GetBool("gin.debug") {
 			gin.SetMode(gin.ReleaseMode)
 		}
+
+		go broadcaster.HandleBroadcast()
 
 		router := gin.Default()
 
