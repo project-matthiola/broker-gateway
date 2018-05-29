@@ -1,9 +1,13 @@
 package broadcaster
 
 import (
+	"context"
+	"fmt"
 	"log"
 
+	"github.com/coreos/etcd/clientv3"
 	"github.com/gorilla/websocket"
+	"github.com/rudeigerc/broker-gateway/mapper"
 )
 
 type Data struct {
@@ -34,5 +38,27 @@ func HandleBroadcast() {
 			}
 		}
 
+	}
+}
+
+func HandleWatcher() {
+	etcdClient := mapper.NewEtcdClient()
+	rch := etcdClient.Watch(context.Background(), "/foo", clientv3.WithPrefix(), clientv3.WithProgressNotify())
+	for {
+		wresp := <-rch
+		fmt.Printf("wresp.Header.Revision: %d\n", wresp.Header.Revision)
+		fmt.Println("wresp.IsProgressNotify:", wresp.IsProgressNotify())
+
+		data := Data{
+			Bids:  [][]float64{{295.96, 10.34}},
+			Asks:  [][]float64{{295.89, 2.41}},
+			Level: 1,
+		}
+		msg := Message{
+			Type:      "test",
+			FuturesId: "test",
+			Data:      data,
+		}
+		Broadcast <- msg
 	}
 }

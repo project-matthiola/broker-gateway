@@ -21,6 +21,7 @@ var broadcasterCmd = &cobra.Command{
 		}
 
 		go broadcaster.HandleBroadcast()
+		go broadcaster.HandleWatcher()
 
 		router := gin.Default()
 

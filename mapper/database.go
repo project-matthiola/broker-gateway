@@ -3,7 +3,9 @@ package mapper
 import (
 	"fmt"
 	"log"
+	"time"
 
+	"github.com/coreos/etcd/clientv3"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/rudeigerc/broker-gateway/model"
@@ -26,4 +28,15 @@ func NewDB() *gorm.DB {
 
 	db.AutoMigrate(&model.Firm{})
 	return db
+}
+
+func NewEtcdClient() *clientv3.Client {
+	cli, err := clientv3.New(clientv3.Config{
+		Endpoints:   viper.GetStringSlice("etcd.endpoints"),
+		DialTimeout: 5 * time.Second,
+	})
+	if err != nil {
+		log.Fatalf("[mapper.database.NewEtcdClient] [FETAL] %s", err)
+	}
+	return cli
 }
