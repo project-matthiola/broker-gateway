@@ -20,7 +20,7 @@ var rootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		log.Fatalln(err)
+		log.Fatalf("[cmd.root.rootCmd] [FETAL] %s", err)
 		os.Exit(1)
 	}
 }
@@ -53,7 +53,7 @@ func initConfig() {
 	viper.AutomaticEnv()
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Fatalf("Fatal error config file: %s \n", err)
+		log.Fatalf("[cmd.root.initConfig] [FETAL] Fatal error config file: %s \n", err)
 	}
 
 }

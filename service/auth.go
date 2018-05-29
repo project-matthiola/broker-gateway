@@ -17,7 +17,7 @@ func (a Auth) Sign(firmName string) model.Firm {
 	}
 	err := m.Create(&firm)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("[service.auth] [FETAL] %s", err)
 	}
 	return firm
 }
@@ -27,7 +27,7 @@ func (a Auth) Validate(firmID int) model.Firm {
 	firm := model.Firm{}
 	err := m.FirstByID(&firm, firmID)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("[service.auth] [FETAL] %s", err)
 	}
 	return firm
 }

@@ -28,7 +28,7 @@ func NewReceiver() *Receiver {
 	nsqAddr := viper.GetString("nsq.host") + ":" + viper.GetString("nsq.nsqd.port")
 	producer, err := nsq.NewProducer(nsqAddr, nsq.NewConfig())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("[receiver.receiver] [FETAL] %s", err)
 	}
 
 	r := &Receiver{
@@ -122,6 +122,8 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 		UpdatedAt:    createdAt,
 	}
 
+	log.Printf("[receiver.receiver.OnNewOrderSingle] %v", order)
+
 	marshaled, _ := order.Marshal()
 	r.Publish(viper.GetString("nsq.topic"), marshaled)
 
@@ -160,7 +162,7 @@ func (r *Receiver) OnOrderCancelRequest(msg ordercancelrequest.OrderCancelReques
 		FuturesID: symbol,
 	}
 
-	log.Print(order)
+	log.Printf("[receiver.receiver.OnOrderCancelRequest] %v", order)
 
 	return nil
 }

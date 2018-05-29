@@ -34,7 +34,7 @@ var broadcasterCmd = &cobra.Command{
 		)
 
 		if err := service.Run(); err != nil {
-			log.Fatal(err)
+			log.Fatalf("[cmd.broadcaster.broadcasterCmd] [FETAL] %s", err)
 		}
 	},
 }

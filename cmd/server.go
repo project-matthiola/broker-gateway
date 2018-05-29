@@ -40,7 +40,7 @@ var serverCmd = &cobra.Command{
 		)
 
 		if err := service.Run(); err != nil {
-			log.Fatal(err)
+			log.Fatalf("[cmd.server.serverCmd] [FETAL] %s", err)
 		}
 	},
 }

@@ -23,15 +23,15 @@ func (h *MatchHandler) HandleMessage(m *nsq.Message) error {
 
 	switch enum.OrdType(order.OrderType) {
 	case enum.OrdType_MARKET:
-		newMarketOrder(order)
+		NewMarketOrder(order)
 	case enum.OrdType_LIMIT:
-		newLimitOrder(order)
+		NewLimitOrder(order)
 	case enum.OrdType_STOP:
-		newStopOrder(order)
+		NewStopOrder(order)
 	case enum.OrdType_COUNTER_ORDER_SELECTION:
-		newCancelOrder(order)
+		NewCancelOrder(order)
 	default:
-		return fmt.Errorf("[matcher] [ERROR] Invalid order type: %s", enum.OrdType(order.OrderType))
+		return fmt.Errorf("[matcher.matcher.HandleMessage] [ERROR] Invalid order type: %s", enum.OrdType(order.OrderType))
 	}
 
 	return nil
@@ -46,7 +46,7 @@ func NewMatcher() *Matcher {
 	config.LookupdPollInterval = time.Second
 	consumer, err := nsq.NewConsumer(viper.GetString("nsq.topic"), "order", config)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("[matcher.matcher.NewMatcher] [FETAL] %s", err)
 	}
 
 	m := &Matcher{
@@ -56,24 +56,24 @@ func NewMatcher() *Matcher {
 	consumer.AddHandler(&MatchHandler{})
 	addr := viper.GetString("nsq.host") + ":" + viper.GetString("nsq.nsqlookupd.port")
 	if err := consumer.ConnectToNSQLookupd(addr); err != nil {
-		panic(err)
+		log.Fatalf("[matcher.matcher.NewMatcher] [FETAL] %s", err)
 	}
 
 	return m
 }
 
-func newMarketOrder(order model.Order) {
+func NewMarketOrder(order model.Order) {
 
 }
 
-func newLimitOrder(order model.Order) {
+func NewLimitOrder(order model.Order) {
 
 }
 
-func newStopOrder(order model.Order) {
+func NewStopOrder(order model.Order) {
 
 }
 
-func newCancelOrder(order model.Order) {
+func NewCancelOrder(order model.Order) {
 
 }

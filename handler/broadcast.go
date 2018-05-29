@@ -20,7 +20,7 @@ var upgrader = websocket.Upgrader{
 func PingHandler(c *gin.Context) {
 	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("[handler.broadcast.PingHandler] [FETAL] %s", err)
 	}
 	defer ws.Close()
 
@@ -30,7 +30,7 @@ func PingHandler(c *gin.Context) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Printf("recv: %s", message)
+		log.Printf("[handler.broadcast.PingHandler] recv: %s", message)
 
 		data := broadcaster.Data{
 			Bids:  [][]float64{{295.96, 10.34}},

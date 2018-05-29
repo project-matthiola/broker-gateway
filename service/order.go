@@ -14,6 +14,6 @@ func (o Order) NewOrder(order model.Order) {
 	m := mapper.NewMapper()
 	err := m.Create(&order)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("[service.order.NewOrder] [FETAL] %s", err)
 	}
 }

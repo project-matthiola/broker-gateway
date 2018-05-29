@@ -21,7 +21,7 @@ func NewDB() *gorm.DB {
 
 	db, err := gorm.Open("mysql", mysqlAddr)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("[mapper.database.NewDB] [FETAL] %s", err)
 	}
 
 	db.AutoMigrate(&model.Firm{})

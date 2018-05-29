@@ -25,13 +25,13 @@ var senderCmd = &cobra.Command{
 
 		cfg, err := os.Open(cfgFileName)
 		if err != nil {
-			log.Printf("Error opening %v, %v\n", cfgFileName, err)
+			log.Printf("[cmd.sender.senderCmd] [ERROR] Error opening %v, %v\n", cfgFileName, err)
 			return
 		}
 
 		appSettings, err := quickfix.ParseSettings(cfg)
 		if err != nil {
-			log.Println("Error reading cfg,", err)
+			log.Println("[cmd.sender.senderCmd] [ERROR] Error reading cfg,", err)
 			return
 		}
 
@@ -39,13 +39,13 @@ var senderCmd = &cobra.Command{
 		fileLogFactory, err := quickfix.NewFileLogFactory(appSettings)
 
 		if err != nil {
-			log.Println("Error creating file log factory,", err)
+			log.Println("[cmd.sender.senderCmd] [ERROR] Error creating file log factory,", err)
 			return
 		}
 
 		initiator, err := quickfix.NewInitiator(app, quickfix.NewMemoryStoreFactory(), appSettings, fileLogFactory)
 		if err != nil {
-			log.Printf("Unable to create Initiator: %s\n", err)
+			log.Printf("[cmd.sender.senderCmd] [ERROR] Unable to create Initiator: %s\n", err)
 			return
 		}
 
@@ -80,7 +80,7 @@ var senderCmd = &cobra.Command{
 		)
 
 		if err := service.Run(); err != nil {
-			log.Fatal(err)
+			log.Fatalf("[cmd.sender.senderCmd] [FETAL] %s", err)
 		}
 	},
 }
@@ -102,7 +102,7 @@ func (r Sender) ToAdmin(msg *quickfix.Message, sessionID quickfix.SessionID) { r
 
 // ToApp implemented as part of Application interface.
 func (r Sender) ToApp(msg *quickfix.Message, sessionID quickfix.SessionID) error {
-	log.Printf("Sending %s\n", msg)
+	log.Printf("[cmd.sender.ToApp] Sending %s\n", msg)
 	return nil
 }
 
@@ -113,6 +113,6 @@ func (r Sender) FromAdmin(msg *quickfix.Message, sessionID quickfix.SessionID) q
 
 // FromApp implemented as part of Application interface.
 func (r Sender) FromApp(msg *quickfix.Message, sessionID quickfix.SessionID) (reject quickfix.MessageRejectError) {
-	log.Printf("FromApp: %s\n", msg.String())
+	log.Printf("[cmd.sender.FromApp] FromApp: %s\n", msg.String())
 	return nil
 }

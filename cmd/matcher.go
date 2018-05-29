@@ -24,7 +24,7 @@ var matcherCmd = &cobra.Command{
 		)
 
 		if err := service.Run(); err != nil {
-			log.Fatal(err)
+			log.Fatalf("[cmd.matcher.matcherCmd] [FETAL] %s", err)
 		}
 	},
 }
