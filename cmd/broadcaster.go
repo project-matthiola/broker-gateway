@@ -6,26 +6,28 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/micro/go-web"
 	"github.com/rudeigerc/broker-gateway/broadcaster"
-	"github.com/rudeigerc/broker-gateway/handler"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var broadcasterCmd = &cobra.Command{
 	Use:   "broadcaster",
-	Short: "Run broadcaster",
-	Long:  "Run broadcaster",
+	Short: "Run WebSocket server",
+	Long:  "Run WebSocket server",
 	Run: func(cmd *cobra.Command, args []string) {
 		if !viper.GetBool("gin.debug") {
 			gin.SetMode(gin.ReleaseMode)
 		}
 
-		go broadcaster.HandleBroadcast()
-		go broadcaster.HandleWatcher()
+		hub := broadcaster.NewHub()
+		go hub.RunBroadcaster()
+		go hub.RunWatcher()
 
 		router := gin.Default()
 
-		router.GET("/ping", handler.PingHandler)
+		router.GET("/futures", func(c *gin.Context) {
+			broadcaster.SocketHandler(hub, c)
+		})
 
 		service := web.NewService(
 			web.Name("github.com.rudeigerc.broker-gateway.broadcaster"),

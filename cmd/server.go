@@ -12,8 +12,8 @@ import (
 
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "Run server",
-	Long:  "Run server",
+	Short: "Run HTTP server",
+	Long:  "Run HTTP server",
 	Run: func(cmd *cobra.Command, args []string) {
 		if !viper.GetBool("gin.debug") {
 			gin.SetMode(gin.ReleaseMode)

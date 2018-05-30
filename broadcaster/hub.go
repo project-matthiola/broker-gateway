@@ -3,10 +3,8 @@ package broadcaster
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/coreos/etcd/clientv3"
-	"github.com/gorilla/websocket"
 	"github.com/rudeigerc/broker-gateway/mapper"
 )
 
@@ -22,26 +20,48 @@ type Message struct {
 	Data      Data   `json:"data"`
 }
 
-var (
-	Clients   = make(map[*websocket.Conn]bool)
-	Broadcast = make(chan Message)
-)
+type Hub struct {
+	clients    map[*Client]bool
+	broadcast  chan Message
+	register   chan *Client
+	unregister chan *Client
+}
 
-func HandleBroadcast() {
-	for {
-		msg := <-Broadcast
-
-		for client := range Clients {
-			err := client.WriteJSON(msg)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-
+func NewHub() *Hub {
+	return &Hub{
+		broadcast:  make(chan Message),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
+		clients:    make(map[*Client]bool),
 	}
 }
 
-func HandleWatcher() {
+func (h *Hub) RunBroadcaster() {
+	for {
+		select {
+		case client := <-h.register:
+			h.clients[client] = true
+		case client := <-h.unregister:
+			if _, ok := h.clients[client]; ok {
+				delete(h.clients, client)
+				close(client.message)
+			}
+		case message := <-h.broadcast:
+			for client := range h.clients {
+				select {
+				case client.message <- message:
+				default:
+					close(client.message)
+					delete(h.clients, client)
+				}
+
+			}
+
+		}
+	}
+}
+
+func (h *Hub) RunWatcher() {
 	etcdClient := mapper.NewEtcdClient()
 	rch := etcdClient.Watch(context.Background(), "/foo", clientv3.WithPrefix(), clientv3.WithProgressNotify())
 	for {
@@ -59,6 +79,6 @@ func HandleWatcher() {
 			FuturesId: "test",
 			Data:      data,
 		}
-		Broadcast <- msg
+		h.broadcast <- msg
 	}
 }
