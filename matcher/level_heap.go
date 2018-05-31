@@ -27,3 +27,33 @@ func (h *LevelHeap) Pop() interface{} {
 	*h = old[0 : n-1]
 	return x
 }
+
+// Peek returns the peek of the heap.
+func (h *LevelHeap) Peek() *Level {
+	if h.Len() == 0 {
+		return nil
+	}
+	return &(*h)[0]
+}
+
+// MinHeap defines a min heap.
+type MinHeap struct {
+	LevelHeap
+}
+
+func NewAskHeap() *MinHeap {
+	return &MinHeap{LevelHeap{}}
+}
+
+func (h MinHeap) Less(i, j int) bool { return h.LevelHeap[i].Price.Cmp(h.LevelHeap[j].Price) < 0 }
+
+// MaxHeap defines a max heap.
+type MaxHeap struct {
+	LevelHeap
+}
+
+func NewBidHeap() *MaxHeap {
+	return &MaxHeap{LevelHeap{}}
+}
+
+func (h MaxHeap) Less(i, j int) bool { return h.LevelHeap[i].Price.Cmp(h.LevelHeap[j].Price) > 0 }

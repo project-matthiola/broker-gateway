@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/micro/go-web"
 	"github.com/rudeigerc/broker-gateway/handler"
+	"github.com/rudeigerc/broker-gateway/mapper"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -31,6 +32,9 @@ var serverCmd = &cobra.Command{
 				auth.POST("", handler.AuthHandler)
 			}
 		}
+
+		mapper.NewDB()
+		defer mapper.DB.Close()
 
 		service := web.NewService(
 			web.Name("github.com.rudeigerc.broker-gateway.server"),

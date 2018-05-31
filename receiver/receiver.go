@@ -4,6 +4,8 @@ import (
 	"log"
 	"strconv"
 
+	"time"
+
 	"github.com/nsqio/go-nsq"
 	"github.com/quickfixgo/enum"
 	"github.com/quickfixgo/field"
@@ -99,11 +101,6 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 
 	price, _ := msg.GetPrice()
 
-	createdAt, err := msg.GetTransactTime()
-	if err != nil {
-		return err
-	}
-
 	firmIDInt, _ := strconv.Atoi(firmID)
 	orderID := uuid.NewV1()
 
@@ -118,8 +115,8 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 		OpenQuantity: quantity,
 		Price:        price,
 		Status:       string(enum.OrdStatus_NEW),
-		CreatedAt:    createdAt,
-		UpdatedAt:    createdAt,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 
 	log.Printf("[receiver.receiver.OnNewOrderSingle] %v", order)
@@ -130,7 +127,7 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 	execReport := executionreport.New(
 		field.NewOrderID(order.OrderID.String()),
 		field.NewExecID(uuid.NewV1().String()),
-		field.NewExecType(enum.ExecType(enum.OrdStatus_NEW)),
+		field.NewExecType(enum.ExecType_NEW),
 		field.NewOrdStatus(enum.OrdStatus_NEW),
 		field.NewSide(side),
 		field.NewLeavesQty(order.OpenQuantity, 2),

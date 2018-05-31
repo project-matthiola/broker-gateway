@@ -17,7 +17,6 @@ func StatusHandler(c *gin.Context) {
 }
 
 func ErrorHandler(c *gin.Context, code int, message string) {
-
 	response := &Error{
 		Status:  code,
 		Title:   http.StatusText(code),

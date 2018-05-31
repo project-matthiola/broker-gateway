@@ -26,7 +26,7 @@ var broadcasterCmd = &cobra.Command{
 		router := gin.Default()
 
 		router.GET("/futures", func(c *gin.Context) {
-			broadcaster.SocketHandler(hub, c)
+			broadcaster.FuturesSocketHandler(hub, c)
 		})
 
 		service := web.NewService(

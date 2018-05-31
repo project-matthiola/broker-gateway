@@ -12,7 +12,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-func NewDB() *gorm.DB {
+var DB *gorm.DB
+
+func NewDB() {
+	var err error
+
 	mysqlAddr := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
 		viper.GetString("mysql.user"),
 		viper.GetString("mysql.password"),
@@ -21,13 +25,12 @@ func NewDB() *gorm.DB {
 		viper.GetString("mysql.dbname"),
 	)
 
-	db, err := gorm.Open("mysql", mysqlAddr)
+	DB, err = gorm.Open("mysql", mysqlAddr)
 	if err != nil {
 		log.Fatalf("[mapper.database.NewDB] [FETAL] %s", err)
 	}
 
-	db.AutoMigrate(&model.Firm{})
-	return db
+	DB.AutoMigrate(&model.Firm{})
 }
 
 func NewEtcdClient() *clientv3.Client {

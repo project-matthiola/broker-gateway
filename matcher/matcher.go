@@ -18,7 +18,6 @@ type MatchHandler struct {
 func (h *MatchHandler) HandleMessage(m *nsq.Message) error {
 	order := model.Order{}
 	order.Unmarshal(m.Body)
-	// log.Println(order)
 	service.Order{}.NewOrder(order)
 
 	switch enum.OrdType(order.OrderType) {
@@ -63,15 +62,36 @@ func NewMatcher() *Matcher {
 }
 
 func NewMarketOrder(order model.Order) {
-
+	switch enum.Side(order.Side) {
+	case enum.Side_BUY:
+		return
+	case enum.Side_SELL:
+		return
+	default:
+		log.Print("matcher.matcher.NewMarketOrder [ERROR] Invalid side of order.")
+	}
 }
 
 func NewLimitOrder(order model.Order) {
-
+	switch enum.Side(order.Side) {
+	case enum.Side_BUY:
+		return
+	case enum.Side_SELL:
+		return
+	default:
+		log.Print("matcher.matcher.NewMarketOrder [ERROR] Invalid side of order.")
+	}
 }
 
 func NewStopOrder(order model.Order) {
-
+	switch enum.Side(order.Side) {
+	case enum.Side_BUY:
+		return
+	case enum.Side_SELL:
+		return
+	default:
+		log.Print("matcher.matcher.NewMarketOrder [ERROR] Invalid side of order.")
+	}
 }
 
 func NewCancelOrder(order model.Order) {

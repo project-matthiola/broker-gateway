@@ -63,6 +63,8 @@ func (h *Hub) RunBroadcaster() {
 
 func (h *Hub) RunWatcher() {
 	etcdClient := mapper.NewEtcdClient()
+	defer etcdClient.Close()
+
 	rch := etcdClient.Watch(context.Background(), "/foo", clientv3.WithPrefix(), clientv3.WithProgressNotify())
 	for {
 		wresp := <-rch

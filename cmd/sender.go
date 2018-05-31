@@ -67,6 +67,7 @@ var senderCmd = &cobra.Command{
 			msg := order.ToMessage()
 
 			err := quickfix.Send(msg)
+			break
 			if err != nil {
 				log.Println(err)
 				break

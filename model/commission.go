@@ -9,3 +9,7 @@ type Commission struct {
 	OrderType    string
 	Percentage   int
 }
+
+func (Commission) TableName() string {
+	return "commission"
+}

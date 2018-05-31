@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/micro/go-micro"
+	"github.com/rudeigerc/broker-gateway/mapper"
 	"github.com/rudeigerc/broker-gateway/matcher"
 	"github.com/spf13/cobra"
 )
@@ -15,7 +16,12 @@ var matcherCmd = &cobra.Command{
 	Long:  "Run matcher",
 	Run: func(cmd *cobra.Command, args []string) {
 		m := matcher.NewMatcher()
-		defer m.Stop()
+		mapper.NewDB()
+
+		defer func() {
+			m.Stop()
+			mapper.DB.Close()
+		}()
 
 		service := micro.NewService(
 			micro.Name("github.com.rudeigerc.broker-gateway.matcher"),

@@ -22,7 +22,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func SocketHandler(hub *Hub, c *gin.Context) {
+func FuturesSocketHandler(hub *Hub, c *gin.Context) {
 	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Fatalf("[broadcast.client.SocketHandler] [FETAL] %s", err)
@@ -36,11 +36,7 @@ func SocketHandler(hub *Hub, c *gin.Context) {
 }
 
 func (c *Client) writeMessage() {
-	defer func() {
-		c.hub.unregister <- c
-		c.conn.Close()
-	}()
-
+	defer c.conn.Close()
 	for {
 		select {
 		case message, ok := <-c.message:
@@ -54,7 +50,10 @@ func (c *Client) writeMessage() {
 }
 
 func (c *Client) readMessage() {
-	defer c.conn.Close()
+	defer func() {
+		c.hub.unregister <- c
+		c.conn.Close()
+	}()
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
@@ -64,17 +63,5 @@ func (c *Client) readMessage() {
 			break
 		}
 		log.Printf("[broadcast.client.readMessage] recv: %s", message)
-
-		data := Data{
-			Bids:  [][]float64{{295.96, 10.34}},
-			Asks:  [][]float64{{295.89, 2.41}},
-			Level: 1,
-		}
-		msg := Message{
-			Type:      string(message),
-			FuturesId: string(message),
-			Data:      data,
-		}
-		c.hub.broadcast <- msg
 	}
 }

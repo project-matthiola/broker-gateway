@@ -11,7 +11,7 @@ import (
 
 // Order represents an investor's instructions to a broker or brokerage firm to purchase or sell a security.
 type Order struct {
-	OrderID      uuid.UUID
+	OrderID      uuid.UUID `gorm:"primary_key"`
 	OrderType    string
 	Side         string
 	FuturesID    string
@@ -23,6 +23,10 @@ type Order struct {
 	Status       string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
+}
+
+func (Order) TableName() string {
+	return "order"
 }
 
 func (o Order) Marshal() ([]byte, error) {
