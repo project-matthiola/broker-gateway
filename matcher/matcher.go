@@ -1,18 +1,23 @@
 package matcher
 
 import (
+	"container/heap"
 	"fmt"
 	"log"
 	"time"
 
+	"github.com/coreos/etcd/clientv3"
 	"github.com/nsqio/go-nsq"
 	"github.com/quickfixgo/enum"
+	"github.com/rudeigerc/broker-gateway/mapper"
 	"github.com/rudeigerc/broker-gateway/model"
 	"github.com/rudeigerc/broker-gateway/service"
+	"github.com/shopspring/decimal"
 	"github.com/spf13/viper"
 )
 
 type MatchHandler struct {
+	*Matcher
 }
 
 func (h *MatchHandler) HandleMessage(m *nsq.Message) error {
@@ -22,13 +27,15 @@ func (h *MatchHandler) HandleMessage(m *nsq.Message) error {
 
 	switch enum.OrdType(order.OrderType) {
 	case enum.OrdType_MARKET:
-		NewMarketOrder(order)
+		h.NewMarketOrder(order)
 	case enum.OrdType_LIMIT:
-		NewLimitOrder(order)
+		h.NewLimitOrder(order)
 	case enum.OrdType_STOP:
-		NewStopOrder(order)
+		h.NewStopOrder(order)
+	case enum.OrdType_STOP_LIMIT:
+		h.NewStopLimitOrder(order)
 	case enum.OrdType_COUNTER_ORDER_SELECTION:
-		NewCancelOrder(order)
+		h.NewCancelOrder(order)
 	default:
 		return fmt.Errorf("[matcher.matcher.HandleMessage] [ERROR] Invalid order type: %s", enum.OrdType(order.OrderType))
 	}
@@ -38,6 +45,16 @@ func (h *MatchHandler) HandleMessage(m *nsq.Message) error {
 
 type Matcher struct {
 	*nsq.Consumer
+
+	etcdClient *clientv3.Client
+
+	asksLimitOrderBook *MinHeap
+	bidsLimitOrderBook *MaxHeap
+
+	asksStopOrderBook *MaxHeap
+	bidsStopOrderBook *MinHeap
+
+	marketPrice decimal.Decimal
 }
 
 func NewMatcher() *Matcher {
@@ -49,10 +66,16 @@ func NewMatcher() *Matcher {
 	}
 
 	m := &Matcher{
-		Consumer: consumer,
+		Consumer:           consumer,
+		etcdClient:         mapper.NewEtcdClient(),
+		asksLimitOrderBook: NewMinHeap(),
+		bidsLimitOrderBook: NewMaxHeap(),
+		asksStopOrderBook:  NewMaxHeap(),
+		bidsStopOrderBook:  NewMinHeap(),
+		marketPrice:        decimal.Zero,
 	}
 
-	consumer.AddHandler(&MatchHandler{})
+	consumer.AddHandler(&MatchHandler{m})
 	addr := viper.GetString("nsq.host") + ":" + viper.GetString("nsq.nsqlookupd.port")
 	if err := consumer.ConnectToNSQLookupd(addr); err != nil {
 		log.Fatalf("[matcher.matcher.NewMatcher] [FETAL] %s", err)
@@ -61,7 +84,69 @@ func NewMatcher() *Matcher {
 	return m
 }
 
-func NewMarketOrder(order model.Order) {
+func (m *Matcher) canMatch(order model.Order) bool {
+	switch enum.OrdType(order.OrderType) {
+	case enum.OrdType_MARKET:
+		switch enum.Side(order.Side) {
+		case enum.Side_BUY:
+			return m.asksLimitOrderBook.Len() != 0
+		case enum.Side_SELL:
+			return m.bidsLimitOrderBook.Len() != 0
+		}
+	case enum.OrdType_STOP, enum.OrdType_STOP_LIMIT:
+		return false
+	case enum.OrdType_LIMIT:
+		switch enum.Side(order.Side) {
+		case enum.Side_BUY:
+			return m.asksLimitOrderBook.Len() != 0 && order.Price.Cmp(m.asksLimitOrderBook.Peek().Price) >= 0
+		case enum.Side_SELL:
+			return m.bidsLimitOrderBook.Len() != 0 && order.Price.Cmp(m.asksLimitOrderBook.Peek().Price) <= 0
+		}
+	}
+	return false
+}
+
+func (m *Matcher) NewMarketOrder(order model.Order) {
+	switch enum.Side(order.Side) {
+	case enum.Side_BUY:
+		if m.canMatch(order) {
+
+		} else {
+			service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_REJECTED))
+		}
+	case enum.Side_SELL:
+		if m.canMatch(order) {
+
+		} else {
+			service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_REJECTED))
+		}
+	default:
+		log.Print("matcher.matcher.NewMarketOrder [ERROR] Invalid side of order.")
+	}
+}
+
+func (m *Matcher) NewLimitOrder(order model.Order) {
+	switch enum.Side(order.Side) {
+	case enum.Side_BUY:
+		if m.canMatch(order) {
+
+		} else {
+			heap.Push(m.bidsLimitOrderBook, Level{order.Price, []*model.Order{&order}})
+			service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_NEW))
+		}
+	case enum.Side_SELL:
+		if m.canMatch(order) {
+
+		} else {
+			heap.Push(m.bidsLimitOrderBook, Level{order.Price, []*model.Order{&order}})
+			service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_NEW))
+		}
+	default:
+		log.Print("matcher.matcher.NewMarketOrder [ERROR] Invalid side of order.")
+	}
+}
+
+func (m *Matcher) NewStopOrder(order model.Order) {
 	switch enum.Side(order.Side) {
 	case enum.Side_BUY:
 		return
@@ -72,7 +157,7 @@ func NewMarketOrder(order model.Order) {
 	}
 }
 
-func NewLimitOrder(order model.Order) {
+func (m *Matcher) NewStopLimitOrder(order model.Order) {
 	switch enum.Side(order.Side) {
 	case enum.Side_BUY:
 		return
@@ -83,17 +168,6 @@ func NewLimitOrder(order model.Order) {
 	}
 }
 
-func NewStopOrder(order model.Order) {
-	switch enum.Side(order.Side) {
-	case enum.Side_BUY:
-		return
-	case enum.Side_SELL:
-		return
-	default:
-		log.Print("matcher.matcher.NewMarketOrder [ERROR] Invalid side of order.")
-	}
-}
-
-func NewCancelOrder(order model.Order) {
+func (m *Matcher) NewCancelOrder(order model.Order) {
 
 }

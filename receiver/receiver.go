@@ -101,6 +101,8 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 
 	price, _ := msg.GetPrice()
 
+	stopPrice, _ := msg.GetStopPx()
+
 	firmIDInt, _ := strconv.Atoi(firmID)
 	orderID := uuid.NewV1()
 
@@ -114,7 +116,8 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 		Quantity:     quantity,
 		OpenQuantity: quantity,
 		Price:        price,
-		Status:       string(enum.OrdStatus_NEW),
+		StopPrice:    stopPrice,
+		Status:       string(enum.OrdStatus_PENDING_NEW),
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
@@ -127,8 +130,8 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 	execReport := executionreport.New(
 		field.NewOrderID(order.OrderID.String()),
 		field.NewExecID(uuid.NewV1().String()),
-		field.NewExecType(enum.ExecType_NEW),
-		field.NewOrdStatus(enum.OrdStatus_NEW),
+		field.NewExecType(enum.ExecType(enum.OrdStatus_PENDING_NEW)),
+		field.NewOrdStatus(enum.OrdStatus_PENDING_NEW),
 		field.NewSide(side),
 		field.NewLeavesQty(order.OpenQuantity, 2),
 		field.NewCumQty(decimal.Zero, 2),

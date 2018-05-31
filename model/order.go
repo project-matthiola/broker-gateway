@@ -20,6 +20,7 @@ type Order struct {
 	Quantity     decimal.Decimal
 	OpenQuantity decimal.Decimal
 	Price        decimal.Decimal
+	StopPrice    decimal.Decimal
 	Status       string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
@@ -40,6 +41,7 @@ func (o Order) Marshal() ([]byte, error) {
 		o.Quantity.String(),
 		o.OpenQuantity.String(),
 		o.Price.String(),
+		o.StopPrice.String(),
 		o.Status,
 		o.CreatedAt.String(),
 		o.UpdatedAt.String(),
@@ -86,14 +88,19 @@ func (o *Order) Unmarshal(buf []byte) error {
 		return err
 	}
 
-	o.Status = a[9]
-
-	o.CreatedAt, err = time.Parse("2006-01-02 15:04:05 +0000 UTC", a[10])
+	o.StopPrice, err = decimal.NewFromString(a[9])
 	if err != nil {
 		return err
 	}
 
-	o.UpdatedAt, err = time.Parse("2006-01-02 15:04:05 +0000 UTC", a[11])
+	o.Status = a[10]
+
+	o.CreatedAt, err = time.Parse("2006-01-02 15:04:05 +0000 UTC", a[11])
+	if err != nil {
+		return err
+	}
+
+	o.UpdatedAt, err = time.Parse("2006-01-02 15:04:05 +0000 UTC", a[12])
 	if err != nil {
 		return err
 	}

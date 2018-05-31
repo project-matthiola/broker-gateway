@@ -15,12 +15,12 @@ var matcherCmd = &cobra.Command{
 	Short: "Run matcher",
 	Long:  "Run matcher",
 	Run: func(cmd *cobra.Command, args []string) {
-		m := matcher.NewMatcher()
 		mapper.NewDB()
+		m := matcher.NewMatcher()
 
 		defer func() {
-			m.Stop()
 			mapper.DB.Close()
+			m.Stop()
 		}()
 
 		service := micro.NewService(

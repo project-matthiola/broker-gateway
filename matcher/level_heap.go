@@ -41,7 +41,7 @@ type MinHeap struct {
 	LevelHeap
 }
 
-func NewAskHeap() *MinHeap {
+func NewMinHeap() *MinHeap {
 	return &MinHeap{LevelHeap{}}
 }
 
@@ -52,7 +52,7 @@ type MaxHeap struct {
 	LevelHeap
 }
 
-func NewBidHeap() *MaxHeap {
+func NewMaxHeap() *MaxHeap {
 	return &MaxHeap{LevelHeap{}}
 }
 

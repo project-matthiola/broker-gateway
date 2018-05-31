@@ -56,6 +56,17 @@ $ brew install mysql
 $ brew services start mysql
 ```
 
+### Store
+
+#### etcd
+
+[etcd](https://github.com/coreos/etcd) is a distributed reliable key-value store for the most critical data of a distributed system.
+
+```shell
+$ brew install etcd
+$ brew services start etcd
+```
+
 ### Message Queue
 
 #### NSQ
@@ -86,17 +97,6 @@ $ nsqadmin --lookupd-http-address=127.0.0.1:4161
 
 - In a web browser open [`http://127.0.0.1:4171`](http://127.0.0.1:4171) to view the nsqadmin UI and see statistics.
 
-### Store
-
-#### etcd
-
-[etcd](https://github.com/coreos/etcd) is a distributed reliable key-value store for the most critical data of a distributed system.
-
-```shell
-$ brew install etcd
-$ brew services start etcd
-```
-
 ### Service Discovery
 
 #### Consul
@@ -105,6 +105,10 @@ $ brew services start etcd
 $ brew install consul
 $ consul agent -dev
 ```
+
+## Docs
+
+See [docs](https://github.com/project-matthiola/docs) and [api-docs](https://github.com/project-matthiola/api-docs).
 
 ## License
 
