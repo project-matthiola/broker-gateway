@@ -13,7 +13,7 @@ type Level struct {
 type LevelHeap []Level
 
 func (h LevelHeap) Len() int           { return len(h) }
-func (h LevelHeap) Less(i, j int) bool { return h[i].Price.Cmp(h[j].Price) < 0 }
+func (h LevelHeap) Less(i, j int) bool { return h[i].Price.LessThan(h[j].Price) }
 func (h LevelHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
 
 func (h *LevelHeap) Push(x interface{}) {
@@ -45,7 +45,7 @@ func NewMinHeap() *MinHeap {
 	return &MinHeap{LevelHeap{}}
 }
 
-func (h MinHeap) Less(i, j int) bool { return h.LevelHeap[i].Price.Cmp(h.LevelHeap[j].Price) < 0 }
+func (h MinHeap) Less(i, j int) bool { return h.LevelHeap[i].Price.LessThan(h.LevelHeap[j].Price) }
 
 // MaxHeap defines a max heap.
 type MaxHeap struct {
@@ -56,4 +56,4 @@ func NewMaxHeap() *MaxHeap {
 	return &MaxHeap{LevelHeap{}}
 }
 
-func (h MaxHeap) Less(i, j int) bool { return h.LevelHeap[i].Price.Cmp(h.LevelHeap[j].Price) > 0 }
+func (h MaxHeap) Less(i, j int) bool { return h.LevelHeap[i].Price.GreaterThan(h.LevelHeap[j].Price) }

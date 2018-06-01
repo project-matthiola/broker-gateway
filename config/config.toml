@@ -1,9 +1,5 @@
 [gin]
   debug = true
-  port = 8080
-
-[websocket]
-  port = 8000
 
 [auth]
   secret = "matthiola"

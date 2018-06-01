@@ -47,11 +47,45 @@ See `config/config.toml`.
 
 ## Requirement
 
+### Microservices
+
+#### Micro
+
+[Micro](https://github.com/micro/micro) is a toolkit for cloud-native development. It helps you build future-proof application platforms and services.
+
+```bash
+$ go get -u github.com/micro/micro
+```
+
+### Service Discovery
+
+#### Consul
+
+[Consul](https://github.com/hashicorp/consul) is a tool for service discovery and configuration. Consul is distributed, highly available, and extremely scalable.
+
+```bash
+$ brew install consul
+$ consul agent -dev
+```
+
+### API Gateway
+
+#### Go API
+
+[Go API](https://github.com/micro/go-api) is a pluggable API framework.
+
+It builds on go-micro and includes a set of packages for composing HTTP based APIs.
+
+```bash
+# The HTTP handler with web socket support included
+$ micro api --namespace=github.com.rudeigerc.broker-gateway --handler=web
+```
+
 ### Database
 
 #### MySQL
 
-```shell
+```bash
 $ brew install mysql
 $ brew services start mysql
 ```
@@ -62,7 +96,7 @@ $ brew services start mysql
 
 [etcd](https://github.com/coreos/etcd) is a distributed reliable key-value store for the most critical data of a distributed system.
 
-```shell
+```bash
 $ brew install etcd
 $ brew services start etcd
 ```
@@ -73,38 +107,29 @@ $ brew services start etcd
 
 [NSQ](https://nsq.io/) is a realtime distributed messaging platform.
 
-```shell
+```bash
 $ brew install nsq
 ```
 
 - In one shell, start `nsqlookupd`:
 
-```shell
+```bash
 $ nsqlookupd --broadcast-address=127.0.0.1
 ```
 
 - In another shell, start `nsqd`:
 
-```shell
+```bash
 $ nsqd --lookupd-tcp-address=127.0.0.1:4160 --broadcast-address=127.0.0.1
 ```
 
 - In another shell, start `nsqadmin`:
 
-```shell
+```bash
 $ nsqadmin --lookupd-http-address=127.0.0.1:4161
 ```
 
 - In a web browser open [`http://127.0.0.1:4171`](http://127.0.0.1:4171) to view the nsqadmin UI and see statistics.
-
-### Service Discovery
-
-#### Consul
-
-```shell
-$ brew install consul
-$ consul agent -dev
-```
 
 ## Docs
 

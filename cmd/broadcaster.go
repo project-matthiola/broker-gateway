@@ -25,14 +25,16 @@ var broadcasterCmd = &cobra.Command{
 
 		router := gin.Default()
 
-		router.GET("/futures", func(c *gin.Context) {
-			broadcaster.FuturesSocketHandler(hub, c)
-		})
+		b := router.Group("/broadcaster")
+		{
+			b.GET("/futures", func(c *gin.Context) {
+				broadcaster.FuturesSocketHandler(hub, c)
+			})
+		}
 
 		service := web.NewService(
 			web.Name("github.com.rudeigerc.broker-gateway.broadcaster"),
 			web.Version("1.0.0"),
-			web.Address(":"+viper.GetString("websocket.port")),
 			web.Handler(router),
 		)
 
@@ -40,10 +42,4 @@ var broadcasterCmd = &cobra.Command{
 			log.Fatalf("[cmd.broadcaster.broadcasterCmd] [FETAL] %s", err)
 		}
 	},
-}
-
-func init() {
-	serverCmd.PersistentFlags().Int("websocket.port", 8000, "port of WebSocket server")
-
-	viper.BindPFlags(serverCmd.PersistentFlags())
 }

@@ -98,9 +98,9 @@ func (m *Matcher) canMatch(order model.Order) bool {
 	case enum.OrdType_LIMIT:
 		switch enum.Side(order.Side) {
 		case enum.Side_BUY:
-			return m.asksLimitOrderBook.Len() != 0 && order.Price.Cmp(m.asksLimitOrderBook.Peek().Price) >= 0
+			return m.asksLimitOrderBook.Len() != 0 && order.Price.GreaterThanOrEqual(m.asksLimitOrderBook.Peek().Price)
 		case enum.Side_SELL:
-			return m.bidsLimitOrderBook.Len() != 0 && order.Price.Cmp(m.asksLimitOrderBook.Peek().Price) <= 0
+			return m.bidsLimitOrderBook.Len() != 0 && order.Price.LessThanOrEqual(m.asksLimitOrderBook.Peek().Price)
 		}
 	}
 	return false
@@ -126,23 +126,36 @@ func (m *Matcher) NewMarketOrder(order model.Order) {
 }
 
 func (m *Matcher) NewLimitOrder(order model.Order) {
-	switch enum.Side(order.Side) {
-	case enum.Side_BUY:
-		if m.canMatch(order) {
+	var peek *Level
 
-		} else {
-			heap.Push(m.bidsLimitOrderBook, Level{order.Price, []*model.Order{&order}})
-			service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_NEW))
+	for order.OpenQuantity.GreaterThan(decimal.Zero) {
+		switch enum.Side(order.Side) {
+		case enum.Side_BUY:
+			peek = m.asksLimitOrderBook.Peek()
+			if !m.canMatch(order) {
+				heap.Push(m.bidsLimitOrderBook, Level{order.Price, []*model.Order{&order}})
+				service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_NEW))
+				break
+			}
+		case enum.Side_SELL:
+			peek = m.bidsLimitOrderBook.Peek()
+			if !m.canMatch(order) {
+				heap.Push(m.asksLimitOrderBook, Level{order.Price, []*model.Order{&order}})
+				service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_NEW))
+				break
+			}
+		default:
+			log.Print("matcher.matcher.NewMarketOrder [ERROR] Invalid side of order.")
+			service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_REJECTED))
+			break
 		}
-	case enum.Side_SELL:
-		if m.canMatch(order) {
 
-		} else {
-			heap.Push(m.bidsLimitOrderBook, Level{order.Price, []*model.Order{&order}})
-			service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_NEW))
+		if peek.Order[0].OpenQuantity.GreaterThan(order.OpenQuantity) {
+			peek.Order[0].OpenQuantity = peek.Order[0].OpenQuantity.Sub(order.OpenQuantity)
+			break
 		}
-	default:
-		log.Print("matcher.matcher.NewMarketOrder [ERROR] Invalid side of order.")
+		order.OpenQuantity = order.OpenQuantity.Sub(peek.Order[0].OpenQuantity)
+		peek.Order = peek.Order[1:]
 	}
 }
 

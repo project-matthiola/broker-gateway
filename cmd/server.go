@@ -22,7 +22,7 @@ var serverCmd = &cobra.Command{
 
 		router := gin.Default()
 
-		v1 := router.Group("/api/v1")
+		v1 := router.Group("/server/api/v1")
 		{
 			v1.GET("/status", handler.StatusHandler)
 
@@ -39,7 +39,7 @@ var serverCmd = &cobra.Command{
 		service := web.NewService(
 			web.Name("github.com.rudeigerc.broker-gateway.server"),
 			web.Version("1.0.0"),
-			web.Address(":"+viper.GetString("gin.port")),
+			// web.Address(":"+viper.GetString("gin.port")),
 			web.Handler(router),
 		)
 
@@ -47,10 +47,4 @@ var serverCmd = &cobra.Command{
 			log.Fatalf("[cmd.server.serverCmd] [FETAL] %s", err)
 		}
 	},
-}
-
-func init() {
-	serverCmd.PersistentFlags().IntP("gin.port", "p", 8080, "port of HTTP server")
-
-	viper.BindPFlags(serverCmd.PersistentFlags())
 }

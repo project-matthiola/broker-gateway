@@ -16,7 +16,7 @@ type Data struct {
 
 type Message struct {
 	Type      string `json:"type"`
-	FuturesId string `json:"futures_id"`
+	FuturesID string `json:"futures_id"`
 	Data      Data   `json:"data"`
 }
 
@@ -78,7 +78,7 @@ func (h *Hub) RunWatcher() {
 		}
 		msg := Message{
 			Type:      "test",
-			FuturesId: "test",
+			FuturesID: "test",
 			Data:      data,
 		}
 		h.broadcast <- msg
