@@ -99,9 +99,15 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 		return err
 	}
 
-	price, _ := msg.GetPrice()
+	price, err := msg.GetPrice()
+	if (ordType == enum.OrdType_LIMIT || ordType == enum.OrdType_STOP_LIMIT) && err != nil {
+		return err
+	}
 
-	stopPrice, _ := msg.GetStopPx()
+	stopPrice, err := msg.GetStopPx()
+	if (ordType == enum.OrdType_STOP || ordType == enum.OrdType_STOP_LIMIT) && err != nil {
+		return err
+	}
 
 	firmIDInt, _ := strconv.Atoi(firmID)
 	orderID := uuid.NewV1()

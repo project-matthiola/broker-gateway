@@ -30,7 +30,7 @@ func NewDB() {
 		log.Fatalf("[mapper.database.NewDB] [FETAL] %s", err)
 	}
 
-	DB.AutoMigrate(&model.Firm{}, &model.Order{})
+	DB.AutoMigrate(&model.Commission{}, &model.Firm{}, &model.Futures{}, &model.Order{}, &model.Trade{})
 }
 
 func NewEtcdClient() *clientv3.Client {

@@ -54,24 +54,37 @@ var senderCmd = &cobra.Command{
 
 		for {
 			clOrdID := field.NewClOrdID(uuid.NewV1().String())
-			side := field.NewSide(enum.Side_BUY)
+			side := field.NewSide(enum.Side_SELL)
 			transacttime := field.NewTransactTime(time.Now())
-			ordtype := field.NewOrdType(enum.OrdType_MARKET)
+			ordtype := field.NewOrdType(enum.OrdType_LIMIT)
 
 			order := newordersingle.New(clOrdID, side, transacttime, ordtype)
 			order.SetSenderCompID("Trader")
 			order.SetSenderSubID("John Doe")
 			order.SetTargetCompID("Broker")
 			order.SetSymbol("GC_SEP18")
+			order.SetPrice(decimal.NewFromFloat(50), 2)
 			order.SetOrderQty(decimal.NewFromFloat(23.14), 2)
 			msg := order.ToMessage()
 
-			err := quickfix.Send(msg)
+			quickfix.Send(msg)
+
+			clOrdID = field.NewClOrdID(uuid.NewV1().String())
+			side = field.NewSide(enum.Side_BUY)
+			transacttime = field.NewTransactTime(time.Now())
+			ordtype = field.NewOrdType(enum.OrdType_MARKET)
+
+			order = newordersingle.New(clOrdID, side, transacttime, ordtype)
+			order.SetSenderCompID("Trader")
+			order.SetSenderSubID("John Doe")
+			order.SetTargetCompID("Broker")
+			order.SetSymbol("GC_SEP18")
+			order.SetOrderQty(decimal.NewFromFloat(10), 2)
+			msg = order.ToMessage()
+
+			quickfix.Send(msg)
+
 			break
-			if err != nil {
-				log.Println(err)
-				break
-			}
 		}
 
 		service := micro.NewService(

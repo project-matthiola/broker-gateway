@@ -39,7 +39,6 @@ var serverCmd = &cobra.Command{
 		service := web.NewService(
 			web.Name("github.com.rudeigerc.broker-gateway.server"),
 			web.Version("1.0.0"),
-			// web.Address(":"+viper.GetString("gin.port")),
 			web.Handler(router),
 		)
 

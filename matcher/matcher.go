@@ -55,6 +55,8 @@ type Matcher struct {
 	bidsStopOrderBook *MinHeap
 
 	marketPrice decimal.Decimal
+
+	executor *Executor
 }
 
 func NewMatcher() *Matcher {
@@ -73,6 +75,7 @@ func NewMatcher() *Matcher {
 		asksStopOrderBook:  NewMaxHeap(),
 		bidsStopOrderBook:  NewMinHeap(),
 		marketPrice:        decimal.Zero,
+		executor:           &Executor{},
 	}
 
 	consumer.AddHandler(&MatchHandler{m})
@@ -106,25 +109,58 @@ func (m *Matcher) canMatch(order model.Order) bool {
 	return false
 }
 
+// NewMarketOrder creates a new marker order.
 func (m *Matcher) NewMarketOrder(order model.Order) {
-	switch enum.Side(order.Side) {
-	case enum.Side_BUY:
-		if m.canMatch(order) {
+	var peek *Level
 
-		} else {
+	for order.OpenQuantity.GreaterThan(decimal.Zero) {
+		switch enum.Side(order.Side) {
+		case enum.Side_BUY:
+			if !m.canMatch(order) {
+				service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_REJECTED))
+			}
+			peek = m.asksLimitOrderBook.Peek()
+		case enum.Side_SELL:
+			if !m.canMatch(order) {
+				service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_REJECTED))
+			}
+			peek = m.bidsLimitOrderBook.Peek()
+		default:
+			log.Print("matcher.matcher.NewMarketOrder [ERROR] Invalid side of order.")
 			service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_REJECTED))
+			break
 		}
-	case enum.Side_SELL:
-		if m.canMatch(order) {
 
-		} else {
-			service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_REJECTED))
+		if peek.Order[0].OpenQuantity.GreaterThan(order.OpenQuantity) {
+			peek.Order[0].OpenQuantity = peek.Order[0].OpenQuantity.Sub(order.OpenQuantity)
+			peek.Order[0].Status = string(enum.OrdStatus_PARTIALLY_FILLED)
+
+			order.OpenQuantity = decimal.Zero
+			order.Status = string(enum.OrdStatus_FILLED)
+			m.executor.NewTrade(*peek.Order[0], order, peek.Order[0].Price, order.OpenQuantity)
+			break
 		}
-	default:
-		log.Print("matcher.matcher.NewMarketOrder [ERROR] Invalid side of order.")
+
+		order.OpenQuantity = order.OpenQuantity.Sub(peek.Order[0].OpenQuantity)
+		order.Status = string(enum.OrdStatus_PARTIALLY_FILLED)
+
+		peek.Order[0].OpenQuantity = decimal.Zero
+		peek.Order[0].Status = string(enum.OrdStatus_FILLED)
+		m.executor.NewTrade(*peek.Order[0], order, peek.Order[0].Price, peek.Order[0].OpenQuantity)
+
+		peek.Order = peek.Order[1:]
+		if len(peek.Order) == 0 {
+			switch enum.Side(order.Side) {
+			case enum.Side_BUY:
+				heap.Pop(m.asksLimitOrderBook)
+			case enum.Side_SELL:
+				heap.Pop(m.bidsLimitOrderBook)
+			}
+		}
 	}
 }
 
+// NewLimitOrder creates a new limit order.
 func (m *Matcher) NewLimitOrder(order model.Order) {
 	var peek *Level
 
@@ -156,9 +192,18 @@ func (m *Matcher) NewLimitOrder(order model.Order) {
 		}
 		order.OpenQuantity = order.OpenQuantity.Sub(peek.Order[0].OpenQuantity)
 		peek.Order = peek.Order[1:]
+		if len(peek.Order) == 0 {
+			switch enum.Side(order.Side) {
+			case enum.Side_BUY:
+				heap.Pop(m.asksLimitOrderBook)
+			case enum.Side_SELL:
+				heap.Pop(m.bidsLimitOrderBook)
+			}
+		}
 	}
 }
 
+// NewStopOrder creates a new stop order.
 func (m *Matcher) NewStopOrder(order model.Order) {
 	switch enum.Side(order.Side) {
 	case enum.Side_BUY:
@@ -170,6 +215,7 @@ func (m *Matcher) NewStopOrder(order model.Order) {
 	}
 }
 
+// NewStopLimitOrder creates a new stop limit order.
 func (m *Matcher) NewStopLimitOrder(order model.Order) {
 	switch enum.Side(order.Side) {
 	case enum.Side_BUY:
@@ -181,6 +227,7 @@ func (m *Matcher) NewStopLimitOrder(order model.Order) {
 	}
 }
 
+// NewCancelOrder cancels a specific order.
 func (m *Matcher) NewCancelOrder(order model.Order) {
 
 }

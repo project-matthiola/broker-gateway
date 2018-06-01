@@ -13,7 +13,7 @@ The broker gateway of project **Matthiola**, a distributed commodities OTC elect
 
 ## Build
 
-```shell
+```bash
 $ brew install dep
 $ dep ensure
 $ go build
@@ -22,7 +22,7 @@ $ ./broker-gateway --help
 
 ## Run
 
-```shell
+```bash
 Usage:
   broker-gateway [command]
 
@@ -80,6 +80,9 @@ It builds on go-micro and includes a set of packages for composing HTTP based AP
 # The HTTP handler with web socket support included
 $ micro api --namespace=github.com.rudeigerc.broker-gateway --handler=web
 ```
+
+- HTTP Server `/server`
+- WebSocket Server `/broadcaster`
 
 ### Database
 
