@@ -14,6 +14,6 @@ func (t Trade) NewTrade(trade *model.Trade) {
 	m := mapper.NewMapper()
 	err := m.Create(trade)
 	if err != nil {
-		log.Fatalf("[service.order.NewOrder] [FETAL] %s", err)
+		log.Printf("[service.order.NewOrder] [ERROR] %s", err)
 	}
 }

@@ -10,8 +10,8 @@ import (
 type Executor struct {
 }
 
-func (e *Executor) NewTrade(initiator model.Order, completion model.Order, price decimal.Decimal, quantity decimal.Decimal) error {
-	trade := model.Trade{
+func (e *Executor) NewTrade(initiator *model.Order, completion *model.Order, price decimal.Decimal, quantity decimal.Decimal) error {
+	trade := &model.Trade{
 		TradeID:              uuid.NewV1(),
 		Quantity:             quantity,
 		Price:                price,
@@ -27,8 +27,8 @@ func (e *Executor) NewTrade(initiator model.Order, completion model.Order, price
 		CompletionCommission: decimal.Zero,
 		CompletionOrderID:    completion.OrderID,
 	}
-	service.Trade{}.NewTrade(&trade)
-	service.Order{}.SaveOrder(&initiator)
-	service.Order{}.SaveOrder(&completion)
+	service.Trade{}.NewTrade(trade)
+	service.Order{}.SaveOrder(initiator)
+	service.Order{}.SaveOrder(completion)
 	return nil
 }
