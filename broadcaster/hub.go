@@ -4,20 +4,37 @@ import (
 	"context"
 	"fmt"
 
+	"time"
+
 	"github.com/coreos/etcd/clientv3"
 	"github.com/rudeigerc/broker-gateway/mapper"
 )
 
-type Data struct {
-	Bids  [][]float64 `json:"bids"`
-	Asks  [][]float64 `json:"asks"`
-	Level int         `json:"level"`
+type Message interface {
 }
 
-type Message struct {
+type Data struct {
+	Bids  [][]string `json:"bids"`
+	Asks  [][]string `json:"asks"`
+	Level int        `json:"level"`
+}
+
+type Futures struct {
 	Type      string `json:"type"`
 	FuturesID string `json:"futures_id"`
 	Data      Data   `json:"data"`
+}
+
+type TradeData struct {
+	Price    string    `json:"price"`
+	Quantity string    `json:"quantity"`
+	Time     time.Time `json:"time"`
+}
+
+type Trade struct {
+	Type      string `json:"type"`
+	FuturesID string `json:"futures_id"`
+	Data      []Data `json:"data"`
 }
 
 type Hub struct {
@@ -72,11 +89,11 @@ func (h *Hub) RunWatcher() {
 		fmt.Println("wresp.IsProgressNotify:", wresp.IsProgressNotify())
 
 		data := Data{
-			Bids:  [][]float64{{295.96, 10.34}},
-			Asks:  [][]float64{{295.89, 2.41}},
+			Bids:  [][]string{{"295.96", "10.34"}},
+			Asks:  [][]string{{"295.89", "2.41"}},
 			Level: 1,
 		}
-		msg := Message{
+		msg := Futures{
 			Type:      "test",
 			FuturesID: "test",
 			Data:      data,

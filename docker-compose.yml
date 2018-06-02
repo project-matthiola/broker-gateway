@@ -1,0 +1,88 @@
+version: '3'
+
+services:
+  nsqlookupd:
+    image: nsqio/nsq
+    ports:
+      - "4160:4160"
+      - "4161:4161"
+    command: /nsqlookupd
+
+  nsqd:
+    image: nsqio/nsq
+    depends_on:
+      - nsqlookupd
+    ports:
+      - "4150:4150"
+      - "4151:4151"
+    command: /nsqd --lookupd-tcp-address=nsqlookupd:4160
+
+  nsqadmin:
+    image: nsqio/nsq
+    depends_on:
+      - nsqlookupd
+    ports:
+      - "4171:4171"
+    command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+
+  consul:
+    image: consul
+    ports:
+      - "8300:8300"
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:53/udp"
+    command: agent -dev -advertise 127.0.0.1
+
+  micro:
+    image: microhq/micro
+    depends_on:
+      - consul
+    ports:
+      - "8080:8080"
+    command: api --namespace=github.com.rudeigerc.broker-gateway --handler=web
+
+  mysql:
+    image: mysql:5.7
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD:
+      MYSQL_DATABASE: broker
+    restart: always
+
+  etcd:
+    image: quay.io/coreos/etcd
+    volumes:
+      - etcd_data:/etcd-data
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    environment:
+      - ETCDCTL_API=3
+    command:
+      - /usr/local/bin/etcd
+      - --name
+      - etcd
+      - --data-dir
+      - /etcd-data
+      - --listen-client-urls
+      - http://0.0.0.0:2379
+      - --advertise-client-urls
+      - http://0.0.0.0:2379
+      - --listen-peer-urls
+      - http://0.0.0.0:2380
+      - --initial-advertise-peer-urls
+      - http://0.0.0.0:2380
+      - --initial-cluster
+      - etcd=http://0.0.0.0:2380
+      - --initial-cluster-token
+      - etcd-token
+      - --initial-cluster-state
+      - new
+
+volumes:
+    mysql_data:
+    etcd_data:

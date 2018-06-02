@@ -137,7 +137,7 @@ Loop:
 			}
 			peek = m.bidsLimitOrderBook.Peek()
 		default:
-			log.Print("matcher.matcher.NewMarketOrder [ERROR] Invalid side of order.")
+			log.Print("matcher.matcher.NewMarketOrder [ERROR] Invalid order side.")
 			service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_REJECTED))
 			break Loop
 		}
@@ -205,7 +205,7 @@ func (m *Matcher) NewLimitOrder(order model.Order) {
 			break
 		}
 	default:
-		log.Print("matcher.matcher.NewLimitOrder [ERROR] Invalid side of order.")
+		log.Print("matcher.matcher.NewLimitOrder [ERROR] Invalid order side.")
 		service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_REJECTED))
 	}
 }
@@ -226,7 +226,7 @@ func (m *Matcher) NewStopOrder(order model.Order) {
 			service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_REJECTED))
 		}
 	default:
-		log.Print("[matcher.matcher.NewStopOrder] [ERROR] Invalid side of order.")
+		log.Print("[matcher.matcher.NewStopOrder] [ERROR] Invalid order side.")
 	}
 }
 
