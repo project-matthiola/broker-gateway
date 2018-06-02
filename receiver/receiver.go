@@ -4,8 +4,6 @@ import (
 	"log"
 	"strconv"
 
-	"time"
-
 	"github.com/nsqio/go-nsq"
 	"github.com/quickfixgo/enum"
 	"github.com/quickfixgo/field"
@@ -112,8 +110,6 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 	firmIDInt, _ := strconv.Atoi(firmID)
 	orderID := uuid.NewV1()
 
-	createdAt := time.Now()
-
 	order := model.Order{
 		OrderID:      orderID,
 		OrderType:    string(ordType),
@@ -126,8 +122,6 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 		Price:        price,
 		StopPrice:    stopPrice,
 		Status:       string(enum.OrdStatus_PENDING_NEW),
-		CreatedAt:    createdAt,
-		UpdatedAt:    createdAt,
 	}
 
 	log.Printf("[receiver.receiver.OnNewOrderSingle] %v", order)

@@ -23,7 +23,7 @@ type MatchHandler struct {
 func (h *MatchHandler) HandleMessage(m *nsq.Message) error {
 	order := model.Order{}
 	order.Unmarshal(m.Body)
-	service.Order{}.NewOrder(order)
+	service.Order{}.NewOrder(&order)
 
 	switch enum.OrdType(order.OrderType) {
 	case enum.OrdType_MARKET:
@@ -112,23 +112,27 @@ func (m *Matcher) canMatch(order model.Order) bool {
 // NewMarketOrder creates a new marker order.
 func (m *Matcher) NewMarketOrder(order model.Order) {
 	var peek *Level
-
+Loop:
 	for order.OpenQuantity.GreaterThan(decimal.Zero) {
 		switch enum.Side(order.Side) {
 		case enum.Side_BUY:
 			if !m.canMatch(order) {
-				service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_REJECTED))
+				// asksLimitOrderBook is empty
+				service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_REJECTED))
+				break Loop
 			}
 			peek = m.asksLimitOrderBook.Peek()
 		case enum.Side_SELL:
 			if !m.canMatch(order) {
-				service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_REJECTED))
+				// bidsLimitOrderBook is empty
+				service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_REJECTED))
+				break Loop
 			}
 			peek = m.bidsLimitOrderBook.Peek()
 		default:
 			log.Print("matcher.matcher.NewMarketOrder [ERROR] Invalid side of order.")
-			service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_REJECTED))
-			break
+			service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_REJECTED))
+			break Loop
 		}
 
 		if peek.Order[0].OpenQuantity.GreaterThan(order.OpenQuantity) {
@@ -137,8 +141,8 @@ func (m *Matcher) NewMarketOrder(order model.Order) {
 
 			order.OpenQuantity = decimal.Zero
 			order.Status = string(enum.OrdStatus_FILLED)
-			m.executor.NewTrade(*peek.Order[0], order, peek.Order[0].Price, order.OpenQuantity)
-			break
+			m.executor.NewTrade(*peek.Order[0], order, peek.Order[0].Price, order.Quantity)
+			break Loop
 		}
 
 		order.OpenQuantity = order.OpenQuantity.Sub(peek.Order[0].OpenQuantity)
@@ -146,7 +150,7 @@ func (m *Matcher) NewMarketOrder(order model.Order) {
 
 		peek.Order[0].OpenQuantity = decimal.Zero
 		peek.Order[0].Status = string(enum.OrdStatus_FILLED)
-		m.executor.NewTrade(*peek.Order[0], order, peek.Order[0].Price, peek.Order[0].OpenQuantity)
+		m.executor.NewTrade(*peek.Order[0], order, peek.Order[0].Price, peek.Order[0].Quantity)
 
 		peek.Order = peek.Order[1:]
 		if len(peek.Order) == 0 {
@@ -163,32 +167,32 @@ func (m *Matcher) NewMarketOrder(order model.Order) {
 // NewLimitOrder creates a new limit order.
 func (m *Matcher) NewLimitOrder(order model.Order) {
 	var peek *Level
-
+Loop:
 	for order.OpenQuantity.GreaterThan(decimal.Zero) {
 		switch enum.Side(order.Side) {
 		case enum.Side_BUY:
 			peek = m.asksLimitOrderBook.Peek()
 			if !m.canMatch(order) {
 				heap.Push(m.bidsLimitOrderBook, Level{order.Price, []*model.Order{&order}})
-				service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_NEW))
-				break
+				service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_NEW))
+				break Loop
 			}
 		case enum.Side_SELL:
 			peek = m.bidsLimitOrderBook.Peek()
 			if !m.canMatch(order) {
 				heap.Push(m.asksLimitOrderBook, Level{order.Price, []*model.Order{&order}})
-				service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_NEW))
-				break
+				service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_NEW))
+				break Loop
 			}
 		default:
 			log.Print("matcher.matcher.NewMarketOrder [ERROR] Invalid side of order.")
-			service.Order{}.UpdateOrder(order, "status", string(enum.OrdStatus_REJECTED))
-			break
+			service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_REJECTED))
+			break Loop
 		}
 
 		if peek.Order[0].OpenQuantity.GreaterThan(order.OpenQuantity) {
 			peek.Order[0].OpenQuantity = peek.Order[0].OpenQuantity.Sub(order.OpenQuantity)
-			break
+			break Loop
 		}
 		order.OpenQuantity = order.OpenQuantity.Sub(peek.Order[0].OpenQuantity)
 		peek.Order = peek.Order[1:]

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/micro/go-micro"
-	"github.com/micro/go-plugins/broker/nsq"
 	"github.com/quickfixgo/quickfix"
 	"github.com/rudeigerc/broker-gateway/receiver"
 	"github.com/spf13/cobra"
@@ -51,10 +50,8 @@ var receiverCmd = &cobra.Command{
 			return
 		}
 
-		broker := nsq.NewBroker()
 		service := micro.NewService(
 			micro.Name("github.com.rudeigerc.broker-gateway.receiver"),
-			micro.Broker(broker),
 			micro.RegisterTTL(time.Minute),
 			micro.RegisterInterval(time.Second*30),
 		)

@@ -10,9 +10,9 @@ import (
 type Trade struct {
 }
 
-func (t Trade) NewTrade(trade model.Trade) {
+func (t Trade) NewTrade(trade *model.Trade) {
 	m := mapper.NewMapper()
-	err := m.Create(&trade)
+	err := m.Create(trade)
 	if err != nil {
 		log.Fatalf("[service.order.NewOrder] [FETAL] %s", err)
 	}

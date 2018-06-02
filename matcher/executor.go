@@ -1,8 +1,6 @@
 package matcher
 
 import (
-	"time"
-
 	"github.com/rudeigerc/broker-gateway/model"
 	"github.com/rudeigerc/broker-gateway/service"
 	"github.com/satori/go.uuid"
@@ -28,10 +26,9 @@ func (e *Executor) NewTrade(initiator model.Order, completion model.Order, price
 		CompletionName:       completion.TraderName,
 		CompletionCommission: decimal.Zero,
 		CompletionOrderID:    completion.OrderID,
-		TradeTime:            time.Now(),
 	}
-	service.Trade{}.NewTrade(trade)
-	service.Order{}.SaveOrder(initiator)
-	service.Order{}.SaveOrder(completion)
+	service.Trade{}.NewTrade(&trade)
+	service.Order{}.SaveOrder(&initiator)
+	service.Order{}.SaveOrder(&completion)
 	return nil
 }

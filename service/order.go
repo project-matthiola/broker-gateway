@@ -10,25 +10,25 @@ import (
 type Order struct {
 }
 
-func (o Order) NewOrder(order model.Order) {
+func (o Order) NewOrder(order *model.Order) {
 	m := mapper.NewMapper()
-	err := m.Create(&order)
+	err := m.Create(order)
 	if err != nil {
 		log.Fatalf("[service.order.NewOrder] [FETAL] %s", err)
 	}
 }
 
-func (o Order) SaveOrder(order model.Order) {
+func (o Order) SaveOrder(order *model.Order) {
 	m := mapper.NewMapper()
-	err := m.Save(&order)
+	err := m.Save(order)
 	if err != nil {
 		log.Fatalf("[service.order.SaveOrder] [FETAL] %s", err)
 	}
 }
 
-func (o Order) UpdateOrder(order model.Order, column string, value string) {
+func (o Order) UpdateOrder(order *model.Order, column string, value string) {
 	m := mapper.NewMapper()
-	err := m.Update(&order, column, value)
+	err := m.Update(order, column, value)
 	if err != nil {
 		log.Fatalf("[service.order.UpdateOrder] [FETAL] %s", err)
 	}

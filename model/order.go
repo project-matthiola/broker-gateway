@@ -17,10 +17,10 @@ type Order struct {
 	FuturesID    string
 	FirmID       int
 	TraderName   string
-	Quantity     decimal.Decimal
-	OpenQuantity decimal.Decimal
-	Price        decimal.Decimal
-	StopPrice    decimal.Decimal
+	Quantity     decimal.Decimal `sql:"DECIMAL(10,2)"`
+	OpenQuantity decimal.Decimal `sql:"DECIMAL(10,2)"`
+	Price        decimal.Decimal `sql:"DECIMAL(10,2)"`
+	StopPrice    decimal.Decimal `sql:"DECIMAL(10,2)"`
 	Status       string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
