@@ -53,3 +53,13 @@ func (o Order) OrderByID(uuid string) model.Order {
 	}
 	return order
 }
+
+func (o Order) Orders() []model.Order {
+	m := mapper.NewMapper()
+	var orders []model.Order
+	err := m.FindWithLimit(&orders, -1)
+	if err != nil {
+		log.Printf("[service.order.Orders] [ERROR] %s", err)
+	}
+	return orders
+}

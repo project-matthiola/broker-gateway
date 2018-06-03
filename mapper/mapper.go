@@ -32,3 +32,7 @@ func (m *Mapper) Delete(model interface{}) error {
 func (m *Mapper) WhereByUUID(model interface{}, column string, uuid string) error {
 	return DB.Where(strings.Replace("column = ?", "column", column, -1), uuid).First(model).Error
 }
+
+func (m *Mapper) FindWithLimit(models interface{}, limit int) error {
+	return DB.Limit(limit).Find(models).Error
+}

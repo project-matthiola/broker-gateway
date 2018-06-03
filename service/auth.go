@@ -31,3 +31,7 @@ func (a Auth) Validate(firmID int) model.Firm {
 	}
 	return firm
 }
+
+func (a Auth) FirmNameByID(firmID int) string {
+	return a.Validate(firmID).FirmName
+}
