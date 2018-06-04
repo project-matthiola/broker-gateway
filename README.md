@@ -11,6 +11,8 @@ The broker gateway of project **Matthiola**, a distributed commodities OTC elect
 - Server (HTTP Server)
 - Broadcaster (WebSocket Server)
 
+![Architecture](asset/Architecture.png)
+
 ## Quick Start
 
 ### Docker Compose
