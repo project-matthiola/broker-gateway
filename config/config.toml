@@ -22,5 +22,7 @@
 [etcd]
   endpoints = ["127.0.0.1:2379", "127.0.0.1:2380"]
   [etcd.keys]
+    asks = "/matthiola/futures_id/asks"
+    bids = "/matthiola/futures_id/bids"
     all = "/matthiola/futures_id/all"
     update = "/matthiola/futures_id/update"

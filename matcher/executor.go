@@ -45,7 +45,7 @@ func (e *Executor) NewTrade(initiator *model.Order, completion *model.Order, pri
 	service.Trade{}.NewTrade(trade)
 	marshaled, err := json.Marshal(trade)
 	if err != nil {
-		log.Panicf("[matcher.executor.NewTrade] [ERROR} %s", err)
+		log.Printf("[matcher.executor.NewTrade] [ERROR] %s", err)
 	}
 
 	key := strings.Replace(viper.GetString("etcd.keys.update"), "futures_id", trade.FuturesID, -1)

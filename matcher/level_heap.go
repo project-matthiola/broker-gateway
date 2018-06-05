@@ -49,7 +49,7 @@ func (h MinHeap) Less(i, j int) bool { return h.LevelHeap[i].Price.LessThan(h.Le
 
 // MaxHeap defines a max heap.
 type MaxHeap struct {
-	LevelHeap `json:"heap"`
+	LevelHeap
 }
 
 func NewMaxHeap() *MaxHeap {

@@ -4,10 +4,15 @@ import (
 	"container/heap"
 	"log"
 
+	"context"
+	"strings"
+
+	"github.com/gin-gonic/gin/json"
 	"github.com/quickfixgo/enum"
 	"github.com/rudeigerc/broker-gateway/model"
 	"github.com/rudeigerc/broker-gateway/service"
 	"github.com/shopspring/decimal"
+	"github.com/spf13/viper"
 )
 
 type MarketData struct {
@@ -105,6 +110,7 @@ Loop:
 			if err != nil {
 				prevMarketPrice := m.marketPrice
 				m.marketPrice = peek.Order[0].Price
+				m.BroadcastOrderBook()
 				m.TriggerStopOrder(prevMarketPrice, m.marketPrice)
 			}
 			break Loop
@@ -135,6 +141,7 @@ Loop:
 				heap.Pop(m.bidsLimitOrderBook)
 			}
 		}
+		m.BroadcastOrderBook()
 	}
 }
 
@@ -145,12 +152,14 @@ func (m *MarketData) NewLimitOrder(order model.Order) {
 		if !m.canMatch(order) {
 			heap.Push(m.bidsLimitOrderBook, Level{order.Price, []*model.Order{&order}})
 			service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_NEW))
+			m.BroadcastOrderBook()
 			break
 		}
 	case enum.Side_SELL:
 		if !m.canMatch(order) {
 			heap.Push(m.asksLimitOrderBook, Level{order.Price, []*model.Order{&order}})
 			service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_NEW))
+			m.BroadcastOrderBook()
 			break
 		}
 	default:
@@ -185,6 +194,7 @@ func (m *MarketData) NewCancelOrder(o model.Order) {
 	if order.FuturesID == o.FuturesID {
 		service.Order{}.CancelOrder(&order)
 	}
+	m.BroadcastOrderBook()
 }
 
 func (m *MarketData) TriggerStopOrder(prev decimal.Decimal, current decimal.Decimal) {
@@ -211,4 +221,21 @@ func (m *MarketData) TriggerStopOrder(prev decimal.Decimal, current decimal.Deci
 			}
 		}
 	}
+}
+
+func (m *MarketData) BroadcastOrderBook() {
+	asksMarshaled, err := json.Marshal(m.asksLimitOrderBook)
+	if err != nil {
+		log.Printf("[matcher.market_data.BroadcastOrderBook] [ERROR] %s", err)
+	}
+
+	bidsMarshaled, err := json.Marshal(m.bidsLimitOrderBook)
+	if err != nil {
+		log.Printf("[matcher.market_data.BroadcastOrderBook] [ERROR] %s", err)
+	}
+
+	asksKey := strings.Replace(viper.GetString("etcd.keys.asks"), "futures_id", m.futuresID, -1)
+	bidsKey := strings.Replace(viper.GetString("etcd.keys.bids"), "futures_id", m.futuresID, -1)
+	m.Executor.EtcdClient.Put(context.Background(), asksKey, string(asksMarshaled))
+	m.Executor.EtcdClient.Put(context.Background(), bidsKey, string(bidsMarshaled))
 }

@@ -63,10 +63,39 @@ var senderCmd = &cobra.Command{
 			order.SetSenderSubID("John Doe")
 			order.SetTargetCompID("Broker")
 			order.SetSymbol("GC_SEP18")
-			order.SetPrice(decimal.NewFromFloat(50), 2)
-			order.SetOrderQty(decimal.NewFromFloat(23.14), 2)
+			order.SetPrice(decimal.NewFromFloat(50.01), 2)
+			order.SetOrderQty(decimal.NewFromFloat(14.21), 2)
 			msg := order.ToMessage()
+			quickfix.Send(msg)
 
+			clOrdID = field.NewClOrdID(uuid.NewV1().String())
+			side = field.NewSide(enum.Side_SELL)
+			transacttime = field.NewTransactTime(time.Now())
+			ordtype = field.NewOrdType(enum.OrdType_LIMIT)
+
+			order = newordersingle.New(clOrdID, side, transacttime, ordtype)
+			order.SetSenderCompID("Trader")
+			order.SetSenderSubID("John Doe")
+			order.SetTargetCompID("Broker")
+			order.SetSymbol("GC_SEP18")
+			order.SetPrice(decimal.NewFromFloat(50.00), 2)
+			order.SetOrderQty(decimal.NewFromFloat(23.14), 2)
+			msg = order.ToMessage()
+			quickfix.Send(msg)
+
+			clOrdID = field.NewClOrdID(uuid.NewV1().String())
+			side = field.NewSide(enum.Side_BUY)
+			transacttime = field.NewTransactTime(time.Now())
+			ordtype = field.NewOrdType(enum.OrdType_LIMIT)
+
+			order = newordersingle.New(clOrdID, side, transacttime, ordtype)
+			order.SetSenderCompID("Trader")
+			order.SetSenderSubID("John Doe")
+			order.SetTargetCompID("Broker")
+			order.SetSymbol("GC_SEP18")
+			order.SetPrice(decimal.NewFromFloat(49.99), 2)
+			order.SetOrderQty(decimal.NewFromFloat(26.79), 2)
+			msg = order.ToMessage()
 			quickfix.Send(msg)
 
 			clOrdID = field.NewClOrdID(uuid.NewV1().String())
@@ -79,9 +108,8 @@ var senderCmd = &cobra.Command{
 			order.SetSenderSubID("John Doe")
 			order.SetTargetCompID("Broker")
 			order.SetSymbol("GC_SEP18")
-			order.SetOrderQty(decimal.NewFromFloat(10), 2)
+			order.SetOrderQty(decimal.NewFromFloat(10.00), 2)
 			msg = order.ToMessage()
-
 			quickfix.Send(msg)
 
 			break
