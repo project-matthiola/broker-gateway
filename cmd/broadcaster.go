@@ -21,16 +21,14 @@ var broadcasterCmd = &cobra.Command{
 
 		hub := broadcaster.NewHub()
 		go hub.RunBroadcaster()
-		go hub.RunWatcher()
+		go hub.RunOrderBookWatcher()
+		go hub.RunTradeWatcher()
 
 		router := gin.Default()
 
-		b := router.Group("/broadcaster")
-		{
-			b.GET("/futures", func(c *gin.Context) {
-				broadcaster.FuturesSocketHandler(hub, c)
-			})
-		}
+		router.GET("/broadcaster/:futures_id", func(c *gin.Context) {
+			broadcaster.SocketHandler(hub, c)
+		})
 
 		service := web.NewService(
 			web.Name("github.com.rudeigerc.broker-gateway.broadcaster"),

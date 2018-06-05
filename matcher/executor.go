@@ -1,8 +1,10 @@
 package matcher
 
 import (
+	"context"
 	"encoding/json"
 	"log"
+	"strings"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/rudeigerc/broker-gateway/mapper"
@@ -10,6 +12,7 @@ import (
 	"github.com/rudeigerc/broker-gateway/service"
 	"github.com/satori/go.uuid"
 	"github.com/shopspring/decimal"
+	"github.com/spf13/viper"
 )
 
 type Executor struct {
@@ -45,7 +48,8 @@ func (e *Executor) NewTrade(initiator *model.Order, completion *model.Order, pri
 		log.Panicf("[matcher.executor.NewTrade] [ERROR} %s", err)
 	}
 
-	log.Print(marshaled)
+	key := strings.Replace(viper.GetString("etcd.keys.update"), "futures_id", trade.FuturesID, -1)
+	e.EtcdClient.Put(context.Background(), key, string(marshaled))
 	service.Order{}.SaveOrder(initiator)
 	service.Order{}.SaveOrder(completion)
 	return nil

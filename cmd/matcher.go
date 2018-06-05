@@ -20,7 +20,8 @@ var matcherCmd = &cobra.Command{
 
 		defer func() {
 			mapper.DB.Close()
-			for _, data := range m.MarketDataMap {
+			for futuresID, data := range m.MarketDataMap {
+				delete(m.MarketDataMap, futuresID)
 				data.Executor.EtcdClient.Close()
 			}
 			m.Stop()

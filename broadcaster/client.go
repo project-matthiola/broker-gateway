@@ -22,7 +22,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func FuturesSocketHandler(hub *Hub, c *gin.Context) {
+func SocketHandler(hub *Hub, c *gin.Context) {
 	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Fatalf("[broadcast.client.SocketHandler] [FETAL] %s", err)
