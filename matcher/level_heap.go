@@ -6,8 +6,8 @@ import (
 )
 
 type Level struct {
-	Price decimal.Decimal
-	Order []*model.Order
+	Price decimal.Decimal `json:"price"`
+	Order []*model.Order  `json:"orders"`
 }
 
 type LevelHeap []Level
@@ -49,7 +49,7 @@ func (h MinHeap) Less(i, j int) bool { return h.LevelHeap[i].Price.LessThan(h.Le
 
 // MaxHeap defines a max heap.
 type MaxHeap struct {
-	LevelHeap
+	LevelHeap `json:"heap"`
 }
 
 func NewMaxHeap() *MaxHeap {

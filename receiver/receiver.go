@@ -1,6 +1,7 @@
 package receiver
 
 import (
+	"encoding/json"
 	"log"
 	"strconv"
 
@@ -126,7 +127,7 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 
 	log.Printf("[receiver.receiver.OnNewOrderSingle] %v", order)
 
-	marshaled, _ := order.Marshal()
+	marshaled, _ := json.Marshal(order)
 	r.Publish(viper.GetString("nsq.topic"), marshaled)
 
 	execReport := executionreport.New(
