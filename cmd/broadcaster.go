@@ -24,6 +24,8 @@ var broadcasterCmd = &cobra.Command{
 		go hub.RunOrderBookWatcher()
 		go hub.RunTradeWatcher()
 
+		defer hub.EtcdClient.Close()
+
 		router := gin.Default()
 
 		router.GET("/broadcaster/:futures_id", func(c *gin.Context) {

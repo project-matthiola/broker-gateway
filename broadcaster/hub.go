@@ -1,13 +1,12 @@
 package broadcaster
 
 import (
+	"container/heap"
 	"context"
 	"encoding/json"
 	"log"
 	"strings"
 	"time"
-
-	"container/heap"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/rudeigerc/broker-gateway/mapper"
@@ -39,6 +38,7 @@ type TradeData struct {
 }
 
 type Hub struct {
+	EtcdClient *clientv3.Client
 	clients    map[*Client]bool
 	broadcast  chan Message
 	register   chan *Client
@@ -47,6 +47,7 @@ type Hub struct {
 
 func NewHub() *Hub {
 	return &Hub{
+		EtcdClient: mapper.NewEtcdClient(),
 		broadcast:  make(chan Message),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
@@ -81,43 +82,40 @@ func (h *Hub) RunBroadcaster() {
 }
 
 func (h *Hub) RunOrderBookWatcher() {
-	etcdClient := mapper.NewEtcdClient()
-	defer etcdClient.Close()
-
 	asksKey := strings.Replace(viper.GetString("etcd.keys.asks"), "futures_id", "GC_SEP18", -1)
 	bidsKey := strings.Replace(viper.GetString("etcd.keys.bids"), "futures_id", "GC_SEP18", -1)
-	rch := etcdClient.Watch(context.Background(), asksKey, clientv3.WithPrefix(), clientv3.WithProgressNotify())
+	rch := h.EtcdClient.Watch(context.Background(), asksKey, clientv3.WithPrefix(), clientv3.WithProgressNotify())
 	for {
 		<-rch
 
-		asksMarshaled, err := etcdClient.Get(context.Background(), asksKey)
+		asksMarshaled, err := h.EtcdClient.Get(context.Background(), asksKey)
 		if err != nil {
 			log.Fatalf("[broadcaster.hub.RunOrderBookWatcher] [FETAL] %s", err)
 		}
 		asksLimitOrderBook := matcher.MinHeap{}
 		json.Unmarshal([]byte(asksMarshaled.Kvs[0].Value), &asksLimitOrderBook)
-		asks := make([][2]string, asksLimitOrderBook.Len())
+		var asks [][2]string
 		for asksLimitOrderBook.Len() > 0 {
 			level := heap.Pop(&asksLimitOrderBook).(matcher.Level)
 			quantity := decimal.Zero
 			for _, order := range level.Order {
-				quantity.Add(order.Quantity)
+				quantity = quantity.Add(order.OpenQuantity)
 			}
 			asks = append(asks, [2]string{level.Price.String(), quantity.String()})
 		}
 
-		bidsMarshaled, err := etcdClient.Get(context.Background(), bidsKey)
+		bidsMarshaled, err := h.EtcdClient.Get(context.Background(), bidsKey)
 		if err != nil {
 			log.Fatalf("[broadcaster.hub.RunOrderBookWatcher] [FETAL] %s", err)
 		}
 		bidsLimitOrderBook := matcher.MaxHeap{}
 		json.Unmarshal([]byte(bidsMarshaled.Kvs[0].Value), &bidsLimitOrderBook)
-		bids := make([][2]string, asksLimitOrderBook.Len())
+		var bids [][2]string
 		for bidsLimitOrderBook.Len() > 0 {
 			level := heap.Pop(&bidsLimitOrderBook).(matcher.Level)
 			quantity := decimal.Zero
 			for _, order := range level.Order {
-				quantity.Add(order.Quantity)
+				quantity = quantity.Add(order.OpenQuantity)
 			}
 			bids = append(bids, [2]string{level.Price.String(), quantity.String()})
 		}

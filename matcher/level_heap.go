@@ -17,6 +17,12 @@ func (h LevelHeap) Less(i, j int) bool { return h[i].Price.LessThan(h[j].Price) 
 func (h LevelHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
 
 func (h *LevelHeap) Push(x interface{}) {
+	for index, level := range *h {
+		if x.(Level).Price.Equal(level.Price) {
+			(*h)[index].Order = append((*h)[index].Order, x.(Level).Order...)
+			return
+		}
+	}
 	*h = append(*h, x.(Level))
 }
 

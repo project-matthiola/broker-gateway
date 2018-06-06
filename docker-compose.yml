@@ -83,6 +83,39 @@ services:
       - --initial-cluster-state
       - new
 
+  server:
+    build: .
+    depends_on:
+      - consul
+      - mysql
+      - micro
+    command: server
+
+  broadcaster:
+    build: .
+    depends_on:
+      - consul
+      - mysql
+      - micro
+      - etcd
+    command: broadcaster
+
+  receiver:
+    build: .
+    depends_on:
+      - consul
+      - nsqd
+    ports:
+      - "5001:5001"
+    command: server
+
+  matcher:
+    build: .
+    depends_on:
+      - consul
+      - nsqlookupd
+    command: matcher
+
 volumes:
     mysql_data:
     etcd_data:

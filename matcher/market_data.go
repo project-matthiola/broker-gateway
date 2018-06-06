@@ -2,9 +2,8 @@ package matcher
 
 import (
 	"container/heap"
-	"log"
-
 	"context"
+	"log"
 	"strings"
 
 	"github.com/gin-gonic/gin/json"

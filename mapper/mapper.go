@@ -34,5 +34,5 @@ func (m *Mapper) WhereByUUID(model interface{}, column string, uuid string) erro
 }
 
 func (m *Mapper) FindWithLimit(models interface{}, limit int) error {
-	return DB.Limit(limit).Find(models).Error
+	return DB.Order("created_at desc").Limit(limit).Find(models).Error
 }
