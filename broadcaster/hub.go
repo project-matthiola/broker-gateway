@@ -6,12 +6,12 @@ import (
 	"encoding/json"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/rudeigerc/broker-gateway/mapper"
 	"github.com/rudeigerc/broker-gateway/matcher"
 	"github.com/rudeigerc/broker-gateway/model"
+	"github.com/rudeigerc/broker-gateway/service"
 	"github.com/shopspring/decimal"
 	"github.com/spf13/viper"
 )
@@ -21,20 +21,20 @@ type Data interface {
 
 type Message struct {
 	Type      string `json:"type"`
+	Mode      string `json:"mode"`
 	FuturesID string `json:"futures_id"`
 	Data      Data   `json:"data"`
 }
 
 type FuturesData struct {
-	Bids  [][2]string `json:"bids"`
-	Asks  [][2]string `json:"asks"`
-	Level int         `json:"level"`
+	Bids [][2]string `json:"bids"`
+	Asks [][2]string `json:"asks"`
 }
 
 type TradeData struct {
-	Price    string    `json:"price"`
-	Quantity string    `json:"quantity"`
-	Time     time.Time `json:"time"`
+	Price    string `json:"price"`
+	Quantity string `json:"quantity"`
+	Time     string `json:"time"`
 }
 
 type Hub struct {
@@ -60,6 +60,24 @@ func (h *Hub) RunBroadcaster() {
 		select {
 		case client := <-h.register:
 			h.clients[client] = true
+			tradesMap := service.Trade{}.TradesSnapshot()
+			for futuresID, trades := range tradesMap {
+				data := make([]TradeData, len(trades))
+				for index, trade := range trades {
+					data[index] = TradeData{
+						Price:    trade.Price.String(),
+						Quantity: trade.Quantity.String(),
+						Time:     trade.CreatedAt.String(),
+					}
+				}
+				message := Message{
+					Type:      "trade",
+					Mode:      "snapshot",
+					FuturesID: futuresID,
+					Data:      data,
+				}
+				client.message <- message
+			}
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				close(client.message)
@@ -67,13 +85,11 @@ func (h *Hub) RunBroadcaster() {
 			}
 		case message := <-h.broadcast:
 			for client := range h.clients {
-				if client.futuresID == message.FuturesID {
-					select {
-					case client.message <- message:
-					default:
-						close(client.message)
-						delete(h.clients, client)
-					}
+				select {
+				case client.message <- message:
+				default:
+					close(client.message)
+					delete(h.clients, client)
 				}
 			}
 
@@ -122,11 +138,11 @@ func (h *Hub) RunOrderBookWatcher() {
 
 		msg := Message{
 			Type:      "order_book",
+			Mode:      "snapshot",
 			FuturesID: "GC_SEP18",
 			Data: FuturesData{
-				Bids:  bids,
-				Asks:  asks,
-				Level: -1,
+				Bids: bids,
+				Asks: asks,
 			},
 		}
 		h.broadcast <- msg
@@ -138,7 +154,7 @@ func (h *Hub) RunTradeWatcher() {
 	defer etcdClient.Close()
 
 	key := strings.Replace(viper.GetString("etcd.keys.update"), "futures_id", "GC_SEP18", -1)
-	rch := etcdClient.Watch(context.Background(), key, clientv3.WithPrefix(), clientv3.WithProgressNotify())
+	rch := etcdClient.Watch(context.Background(), key, clientv3.WithPrefix())
 	for {
 		<-rch
 		marshaled, err := etcdClient.Get(context.Background(), key)
@@ -149,11 +165,12 @@ func (h *Hub) RunTradeWatcher() {
 		json.Unmarshal([]byte(marshaled.Kvs[0].Value), &trade)
 		msg := Message{
 			Type:      "trade",
+			Mode:      "update",
 			FuturesID: "GC_SEP18",
 			Data: TradeData{
 				Price:    trade.Price.String(),
 				Quantity: trade.Quantity.String(),
-				Time:     trade.CreatedAt,
+				Time:     trade.CreatedAt.String(),
 			},
 		}
 		h.broadcast <- msg

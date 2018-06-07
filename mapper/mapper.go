@@ -36,3 +36,19 @@ func (m *Mapper) WhereByUUID(model interface{}, column string, uuid string) erro
 func (m *Mapper) FindWithLimit(models interface{}, limit int) error {
 	return DB.Order("created_at desc").Limit(limit).Find(models).Error
 }
+
+func (m *Mapper) FutureIDs() ([]string, error) {
+	rows, err := DB.Raw("SELECT DISTINCT futures_id FROM trade").Rows()
+	defer rows.Close()
+	var futuresIDs []string
+	for rows.Next() {
+		var futuresID string
+		rows.Scan(&futuresID)
+		futuresIDs = append(futuresIDs, futuresID)
+	}
+	return futuresIDs, err
+}
+
+func (m *Mapper) FindByFuturesID(models interface{}, futuresID string) error {
+	return DB.Where("futures_id = ?", futuresID).Limit(50).Find(models).Error
+}

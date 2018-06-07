@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/micro/go-web"
 	"github.com/rudeigerc/broker-gateway/broadcaster"
+	"github.com/rudeigerc/broker-gateway/mapper"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -19,16 +20,21 @@ var broadcasterCmd = &cobra.Command{
 			gin.SetMode(gin.ReleaseMode)
 		}
 
+		mapper.NewDB()
+
 		hub := broadcaster.NewHub()
 		go hub.RunBroadcaster()
 		go hub.RunOrderBookWatcher()
 		go hub.RunTradeWatcher()
 
-		defer hub.EtcdClient.Close()
+		defer func() {
+			mapper.DB.Close()
+			hub.EtcdClient.Close()
+		}()
 
 		router := gin.Default()
 
-		router.GET("/broadcaster/:futures_id", func(c *gin.Context) {
+		router.GET("/broadcaster", func(c *gin.Context) {
 			broadcaster.SocketHandler(hub, c)
 		})
 

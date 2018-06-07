@@ -4,17 +4,14 @@ import (
 	"log"
 	"net/http"
 
-	"strings"
-
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
-	futuresID string
-	hub       *Hub
-	conn      *websocket.Conn
-	message   chan Message
+	hub     *Hub
+	conn    *websocket.Conn
+	message chan Message
 }
 
 var upgrader = websocket.Upgrader{
@@ -31,7 +28,7 @@ func SocketHandler(hub *Hub, c *gin.Context) {
 		log.Fatalf("[broadcast.client.SocketHandler] [FETAL] %s", err)
 	}
 
-	client := &Client{strings.Trim(c.Param("futures_id"), "/"), hub, ws, make(chan Message)}
+	client := &Client{hub, ws, make(chan Message)}
 	client.hub.register <- client
 
 	go client.writeMessage()

@@ -37,3 +37,23 @@ func (t Trade) TradeByID(uuid string) model.Trade {
 	}
 	return trade
 }
+
+func (t Trade) TradesSnapshot() map[string][]model.Trade {
+	m := mapper.NewMapper()
+	futuresIDs, err := m.FutureIDs()
+	if err != nil {
+		log.Printf("[service.trade.TradesSnapshot] [ERROR] %s", err)
+	}
+
+	tradesMap := make(map[string][]model.Trade)
+	for _, futuresID := range futuresIDs {
+		var trades []model.Trade
+		err := m.FindByFuturesID(&trades, futuresID)
+		if err != nil {
+			log.Printf("[service.trade.TradesSnapshot] [ERROR] %s", err)
+		}
+		tradesMap[futuresID] = trades
+	}
+
+	return tradesMap
+}
