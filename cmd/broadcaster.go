@@ -23,9 +23,12 @@ var broadcasterCmd = &cobra.Command{
 		mapper.NewDB()
 
 		hub := broadcaster.NewHub()
-		go hub.RunBroadcaster()
-		go hub.RunOrderBookWatcher()
-		go hub.RunTradeWatcher()
+
+		go func() {
+			hub.RunBroadcaster()
+			hub.RunOrderBookWatcher()
+			hub.RunTradeWatcher()
+		}()
 
 		defer func() {
 			mapper.DB.Close()

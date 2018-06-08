@@ -27,7 +27,7 @@ func TradeHandler(c *gin.Context) {
 		return
 	}
 
-	trades := service.Trade{}.TradesWithCondition(firm.FirmID, futuresID, traderName, page)
+	total, trades := service.Trade{}.TradesWithCondition(firm.FirmID, futuresID, traderName, page)
 	data := make([]TradeResponse, len(trades))
 	for index, trade := range trades {
 		response := TradeResponse{
@@ -52,6 +52,7 @@ func TradeHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"data":  data,
 		"count": len(data),
+		"total": total,
 		"page":  page,
 	})
 }
@@ -73,7 +74,7 @@ func OrderHandler(c *gin.Context) {
 		return
 	}
 
-	orders := service.Order{}.OrdersWithCondition(firm.FirmID, futuresID, traderName, status, page)
+	total, orders := service.Order{}.OrdersWithCondition(firm.FirmID, futuresID, traderName, status, page)
 	data := make([]OrderResponse, len(orders))
 	for index, order := range orders {
 		response := OrderResponse{
@@ -96,6 +97,7 @@ func OrderHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"data":  data,
 		"count": len(data),
+		"total": total,
 		"page":  page,
 	})
 }

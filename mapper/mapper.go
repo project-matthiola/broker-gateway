@@ -41,8 +41,10 @@ func (m *Mapper) FindWithLimit(models interface{}, limit int) error {
 	return DB.Order("created_at desc").Limit(limit).Find(models).Error
 }
 
-func (m *Mapper) FindWithPage(models interface{}, page int) error {
+func (m *Mapper) FindWithPage(models interface{}, page int, total *int) error {
 	query := DB
+
+	query.Find(models).Count(total)
 	if page != 0 {
 		query = query.Limit(10).Offset((page - 1) * 10)
 	}
@@ -65,7 +67,7 @@ func (m *Mapper) FindByFuturesID(models interface{}, futuresID string) error {
 	return DB.Where("futures_id = ?", futuresID).Order("created_at desc").Limit(50).Find(models).Error
 }
 
-func (m *Mapper) FindTradesWithCondition(models interface{}, firmID int, futuresID string, traderName string, page int) error {
+func (m *Mapper) FindTradesWithCondition(models interface{}, firmID int, futuresID string, traderName string, page int, total *int) error {
 	query := DB
 	if len(futuresID) != 0 {
 		query = query.Where("futures_id = ?", futuresID)
@@ -73,13 +75,15 @@ func (m *Mapper) FindTradesWithCondition(models interface{}, firmID int, futures
 	if len(traderName) != 0 {
 		query = query.Where("initiator_name = ?", traderName).Or("completion_name = ?", traderName)
 	}
+
+	query.Where("initiator_id = ?", firmID).Or("completion_id = ?", firmID).Find(models).Count(total)
 	if page != 0 {
 		query = query.Limit(10).Offset((page - 1) * 10)
 	}
 	return query.Where("initiator_id = ?", firmID).Or("completion_id = ?", firmID).Order("created_at desc").Find(models).Error
 }
 
-func (m *Mapper) FindOrdersWithCondition(models interface{}, firmID int, futuresID string, traderName string, status string, page int) error {
+func (m *Mapper) FindOrdersWithCondition(models interface{}, firmID int, futuresID string, traderName string, status string, page int, total *int) error {
 	query := DB
 	if len(futuresID) != 0 {
 		query = query.Where("futures_id = ?", futuresID)
@@ -90,6 +94,8 @@ func (m *Mapper) FindOrdersWithCondition(models interface{}, firmID int, futures
 	if len(status) != 0 {
 		query = query.Where("status = ?", status)
 	}
+
+	query.Where("firm_id = ?", firmID).Find(models).Count(total)
 	if page != 0 {
 		query = query.Limit(10).Offset((page - 1) * 10)
 	}

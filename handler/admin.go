@@ -79,7 +79,7 @@ func AdminOrderHandler(c *gin.Context) {
 		return
 	}
 
-	orders := service.Order{}.OrdersWithPage(page)
+	total, orders := service.Order{}.OrdersWithPage(page)
 	data := make([]OrderResponse, len(orders))
 	for index, order := range orders {
 		response := OrderResponse{
@@ -102,6 +102,7 @@ func AdminOrderHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"data":  data,
 		"count": len(data),
+		"total": total,
 		"page":  page,
 	})
 }
@@ -158,7 +159,7 @@ func AdminTradeHandler(c *gin.Context) {
 		}
 		c.JSON(http.StatusOK, gin.H{"data": response})
 	} else {
-		trades := service.Trade{}.TradesWithPage(page)
+		total, trades := service.Trade{}.TradesWithPage(page)
 		data := make([]TradeResponse, len(trades))
 		for index, trade := range trades {
 			response := TradeResponse{
@@ -183,6 +184,7 @@ func AdminTradeHandler(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"data":  data,
 			"count": len(data),
+			"total": total,
 			"page":  page,
 		})
 	}

@@ -58,22 +58,28 @@ func (t Trade) TradesSnapshot() map[string][]model.Trade {
 	return tradesMap
 }
 
-func (t Trade) TradesWithPage(page int) []model.Trade {
+func (t Trade) TradesWithPage(page int) (int, []model.Trade) {
 	m := mapper.NewMapper()
-	var trades []model.Trade
-	err := m.FindWithPage(&trades, page)
+	var (
+		trades []model.Trade
+		total  int
+	)
+	err := m.FindWithPage(&trades, page, &total)
 	if err != nil {
 		log.Printf("[service.trade.OrdersWithPage] [ERROR] %s", err)
 	}
-	return trades
+	return total, trades
 }
 
-func (t Trade) TradesWithCondition(firmID int, futuresID string, traderName string, page int) []model.Trade {
+func (t Trade) TradesWithCondition(firmID int, futuresID string, traderName string, page int) (int, []model.Trade) {
 	m := mapper.NewMapper()
-	var trades []model.Trade
-	err := m.FindTradesWithCondition(&trades, firmID, futuresID, traderName, page)
+	var (
+		trades []model.Trade
+		total  int
+	)
+	err := m.FindTradesWithCondition(&trades, firmID, futuresID, traderName, page, &total)
 	if err != nil {
 		log.Printf("[service.trade.TradesWithCondition] [ERROR] %s", err)
 	}
-	return trades
+	return total, trades
 }
