@@ -24,8 +24,8 @@ func Convert(origin interface{}) string {
 		}
 	case enum.OrdStatus:
 		switch origin {
-		case enum.OrdStatus_PENDING_NEW:
-			return "PENDING_NEW"
+		case enum.OrdStatus_NEW:
+			return "NEW"
 		case enum.OrdStatus_PARTIALLY_FILLED:
 			return "PARTIALLY_FILLED"
 		case enum.OrdStatus_FILLED:
@@ -34,6 +34,8 @@ func Convert(origin interface{}) string {
 			return "CANCELED"
 		case enum.OrdStatus_REJECTED:
 			return "REJECTED"
+		case enum.OrdStatus_PENDING_NEW:
+			return "PENDING_NEW"
 		}
 	}
 	return ""

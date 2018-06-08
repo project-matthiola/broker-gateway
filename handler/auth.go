@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -55,24 +56,18 @@ func AuthHandler(c *gin.Context) {
 func ValidationHandler(c *gin.Context) {
 	tokenString := c.Request.Header.Get("Authorization")
 
-	if tokenString != "" {
-		token, _ := jwt.ParseWithClaims(strings.Split(tokenString, " ")[1], &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
-			return []byte(viper.GetString("auth.secret")), nil
-		})
-
-		if claims, ok := token.Claims.(*jwt.StandardClaims); ok && token.Valid {
-			firmID, _ := strconv.Atoi(claims.Subject)
-			firm := service.Auth{}.Validate(firmID)
-			res := authResponse{
-				FirmID:   firm.FirmID,
-				FirmName: firm.FirmName,
-				Credit:   firm.Credit,
-				Token:    strings.Split(tokenString, " ")[1],
-			}
-			c.JSON(http.StatusOK, gin.H{"data": res})
-			return
-		}
+	firm, err := validate(c)
+	if err != nil {
+		log.Print(err)
+		ErrorHandler(c, http.StatusUnauthorized, "Invalid token.")
+		return
 	}
 
-	ErrorHandler(c, http.StatusUnauthorized, "Invalid token.")
+	res := authResponse{
+		FirmID:   firm.FirmID,
+		FirmName: firm.FirmName,
+		Credit:   firm.Credit,
+		Token:    strings.Split(tokenString, " ")[1],
+	}
+	c.JSON(http.StatusOK, gin.H{"data": res})
 }

@@ -63,3 +63,23 @@ func (o Order) Orders() []model.Order {
 	}
 	return orders
 }
+
+func (o Order) OrdersWithPage(page int) []model.Order {
+	m := mapper.NewMapper()
+	var orders []model.Order
+	err := m.FindWithPage(&orders, page)
+	if err != nil {
+		log.Printf("[service.trade.OrdersWithPage] [ERROR] %s", err)
+	}
+	return orders
+}
+
+func (o Order) OrdersWithCondition(firmID int, futuresID string, traderName string, status string, page int) []model.Order {
+	m := mapper.NewMapper()
+	var orders []model.Order
+	err := m.FindOrdersWithCondition(&orders, firmID, futuresID, traderName, status, page)
+	if err != nil {
+		log.Printf("[service.trade.OrdersWithCondition] [ERROR] %s", err)
+	}
+	return orders
+}

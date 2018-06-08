@@ -146,24 +146,56 @@ Loop:
 
 // NewLimitOrder creates a new limit order.
 func (m *MarketData) NewLimitOrder(order model.Order) {
-	switch enum.Side(order.Side) {
-	case enum.Side_BUY:
-		if !m.canMatch(order) {
-			heap.Push(m.bidsLimitOrderBook, Level{order.Price, []*model.Order{&order}})
-			service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_NEW))
-			m.BroadcastOrderBook()
-			break
+	var peek *Level
+Loop:
+	for order.OpenQuantity.GreaterThan(decimal.Zero) {
+		switch enum.Side(order.Side) {
+		case enum.Side_BUY:
+			if !m.canMatch(order) {
+				heap.Push(m.bidsLimitOrderBook, Level{order.Price, []*model.Order{&order}})
+				service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_NEW))
+				m.BroadcastOrderBook()
+				break Loop
+			}
+		case enum.Side_SELL:
+			if !m.canMatch(order) {
+				heap.Push(m.asksLimitOrderBook, Level{order.Price, []*model.Order{&order}})
+				service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_NEW))
+				m.BroadcastOrderBook()
+				break Loop
+			}
+		default:
+			log.Print("matcher.matcher.NewLimitOrder [ERROR] Invalid order side.")
+			service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_REJECTED))
+			break Loop
 		}
-	case enum.Side_SELL:
-		if !m.canMatch(order) {
-			heap.Push(m.asksLimitOrderBook, Level{order.Price, []*model.Order{&order}})
-			service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_NEW))
-			m.BroadcastOrderBook()
-			break
+
+		price := peek.Order[0].Price
+		quantity := peek.Order[0].OpenQuantity
+		// completion
+		order.OpenQuantity = order.OpenQuantity.Sub(quantity)
+		order.Status = string(enum.OrdStatus_PARTIALLY_FILLED)
+		// initiator
+		peek.Order[0].OpenQuantity = decimal.Zero
+		peek.Order[0].Status = string(enum.OrdStatus_FILLED)
+
+		err := m.Executor.NewTrade(peek.Order[0], &order, price, quantity)
+		if err != nil {
+			prevMarketPrice := m.marketPrice
+			m.marketPrice = peek.Order[0].Price
+			m.TriggerStopOrder(prevMarketPrice, m.marketPrice)
 		}
-	default:
-		log.Print("matcher.matcher.NewLimitOrder [ERROR] Invalid order side.")
-		service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_REJECTED))
+
+		peek.Order = peek.Order[1:]
+		if len(peek.Order) == 0 {
+			switch enum.Side(order.Side) {
+			case enum.Side_BUY:
+				heap.Pop(m.asksLimitOrderBook)
+			case enum.Side_SELL:
+				heap.Pop(m.bidsLimitOrderBook)
+			}
+		}
+		m.BroadcastOrderBook()
 	}
 }
 
@@ -172,13 +204,13 @@ func (m *MarketData) NewStopOrder(order model.Order) {
 	switch enum.Side(order.Side) {
 	case enum.Side_BUY:
 		if order.StopPrice.GreaterThan(m.marketPrice) {
-			heap.Push(m.bidsStopOrderBook, order)
+			heap.Push(m.bidsStopOrderBook, Level{order.Price, []*model.Order{&order}})
 		} else {
 			service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_REJECTED))
 		}
 	case enum.Side_SELL:
 		if order.StopPrice.LessThan(m.marketPrice) {
-			heap.Push(m.asksStopOrderBook, order)
+			heap.Push(m.asksStopOrderBook, Level{order.Price, []*model.Order{&order}})
 		} else {
 			service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_REJECTED))
 		}
@@ -189,8 +221,38 @@ func (m *MarketData) NewStopOrder(order model.Order) {
 
 // NewCancelOrder cancels a specific order.
 func (m *MarketData) NewCancelOrder(o model.Order) {
+	var err error
 	order := service.Order{}.OrderByID(o.OrderID.String())
+
 	if order.FuturesID == o.FuturesID {
+	OrdType:
+		switch enum.OrdType(order.OrderType) {
+		case enum.OrdType_STOP:
+			switch enum.Side(order.Side) {
+			case enum.Side_BUY:
+				err = m.bidsStopOrderBook.Remove(order)
+			case enum.Side_SELL:
+				err = m.asksStopOrderBook.Remove(order)
+			}
+		case enum.OrdType_STOP_LIMIT:
+			switch enum.Side(order.Side) {
+			case enum.Side_BUY:
+				err = m.bidsStopOrderBook.Remove(order)
+			case enum.Side_SELL:
+				err = m.asksStopOrderBook.Remove(order)
+			}
+			if err == nil {
+				break OrdType
+			}
+			fallthrough
+		case enum.OrdType_LIMIT:
+			switch enum.Side(order.Side) {
+			case enum.Side_BUY:
+				err = m.bidsLimitOrderBook.Remove(order)
+			case enum.Side_SELL:
+				err = m.asksLimitOrderBook.Remove(order)
+			}
+		}
 		service.Order{}.CancelOrder(&order)
 	}
 	m.BroadcastOrderBook()

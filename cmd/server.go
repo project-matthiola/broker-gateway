@@ -34,9 +34,13 @@ var serverCmd = &cobra.Command{
 
 			admin := v1.Group("/admin")
 			{
-				admin.GET("/orders", handler.OrderHandler)
-				admin.GET("/trades/*trade_id", handler.TradeHandler)
+				admin.POST("/auth", handler.AdminAuthHandler)
+				admin.GET("/orders", handler.AdminOrderHandler)
+				admin.GET("/trades/*trade_id", handler.AdminTradeHandler)
 			}
+
+			v1.GET("/orders", handler.OrderHandler)
+			v1.GET("/trades", handler.TradeHandler)
 		}
 
 		mapper.NewDB()

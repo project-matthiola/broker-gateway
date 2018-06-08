@@ -3,6 +3,8 @@
 
 [auth]
   secret = "matthiola"
+  [auth.admin]
+    secret = "matthiola.admin"
 
 [nsq]
   host = "127.0.0.1"

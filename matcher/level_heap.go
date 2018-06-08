@@ -1,6 +1,8 @@
 package matcher
 
 import (
+	"fmt"
+
 	"github.com/rudeigerc/broker-gateway/model"
 	"github.com/shopspring/decimal"
 )
@@ -40,6 +42,20 @@ func (h *LevelHeap) Peek() *Level {
 		return nil
 	}
 	return &(*h)[0]
+}
+
+func (h *LevelHeap) Remove(o model.Order) error {
+	for index, level := range *h {
+		if o.Price.Equal(level.Price) {
+			for i, order := range level.Order {
+				if o.OrderID == order.OrderID {
+					(*h)[index].Order = append((*h)[index].Order[:i], (*h)[index].Order[i+1:]...)
+					return nil
+				}
+			}
+		}
+	}
+	return fmt.Errorf("[matcher.level_heap.Remove] [ERROR] Removing order failed")
 }
 
 // MinHeap defines a min heap.

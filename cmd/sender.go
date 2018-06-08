@@ -59,7 +59,7 @@ var senderCmd = &cobra.Command{
 			ordtype := field.NewOrdType(enum.OrdType_LIMIT)
 
 			order := newordersingle.New(clOrdID, side, transacttime, ordtype)
-			order.SetSenderCompID("Trader")
+			order.SetSenderCompID("Sender")
 			order.SetSenderSubID("John Doe")
 			order.SetTargetCompID("Broker")
 			order.SetSymbol("GC_SEP18")
