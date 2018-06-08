@@ -98,81 +98,84 @@ func (h *Hub) RunBroadcaster() {
 }
 
 func (h *Hub) RunOrderBookWatcher() {
-	asksKey := strings.Replace(viper.GetString("etcd.keys.asks"), "futures_id", "GC_SEP18", -1)
-	bidsKey := strings.Replace(viper.GetString("etcd.keys.bids"), "futures_id", "GC_SEP18", -1)
-	rch := h.EtcdClient.Watch(context.Background(), asksKey, clientv3.WithPrefix(), clientv3.WithProgressNotify())
+	rch := h.EtcdClient.Watch(context.Background(), viper.GetString("etcd.keys.orderbook"), clientv3.WithPrefix(), clientv3.WithProgressNotify())
 	for {
-		<-rch
+		wresp := <-rch
 
-		asksMarshaled, err := h.EtcdClient.Get(context.Background(), asksKey)
-		if err != nil {
-			log.Fatalf("[broadcaster.hub.RunOrderBookWatcher] [FETAL] %s", err)
-		}
-		asksLimitOrderBook := matcher.MinHeap{}
-		json.Unmarshal([]byte(asksMarshaled.Kvs[0].Value), &asksLimitOrderBook)
-		var asks [][2]string
-		for asksLimitOrderBook.Len() > 0 {
-			level := heap.Pop(&asksLimitOrderBook).(matcher.Level)
-			quantity := decimal.Zero
-			for _, order := range level.Order {
-				quantity = quantity.Add(order.OpenQuantity)
+		for _, event := range wresp.Events {
+			array := strings.Split(string(event.Kv.Key), "/")
+			futuresID := array[len(array)-1]
+
+			asksKey := strings.Replace(viper.GetString("etcd.keys.asks"), "futures_id", futuresID, -1)
+			bidsKey := strings.Replace(viper.GetString("etcd.keys.bids"), "futures_id", futuresID, -1)
+
+			asksMarshaled, err := h.EtcdClient.Get(context.Background(), asksKey)
+			if err != nil {
+				log.Fatalf("[broadcaster.hub.RunOrderBookWatcher] [FETAL] %s", err)
 			}
-			asks = append(asks, [2]string{level.Price.String(), quantity.String()})
-		}
-
-		bidsMarshaled, err := h.EtcdClient.Get(context.Background(), bidsKey)
-		if err != nil {
-			log.Fatalf("[broadcaster.hub.RunOrderBookWatcher] [FETAL] %s", err)
-		}
-		bidsLimitOrderBook := matcher.MaxHeap{}
-		json.Unmarshal([]byte(bidsMarshaled.Kvs[0].Value), &bidsLimitOrderBook)
-		var bids [][2]string
-		for bidsLimitOrderBook.Len() > 0 {
-			level := heap.Pop(&bidsLimitOrderBook).(matcher.Level)
-			quantity := decimal.Zero
-			for _, order := range level.Order {
-				quantity = quantity.Add(order.OpenQuantity)
+			asksLimitOrderBook := matcher.MinHeap{}
+			json.Unmarshal([]byte(asksMarshaled.Kvs[0].Value), &asksLimitOrderBook)
+			var asks [][2]string
+			for asksLimitOrderBook.Len() > 0 {
+				level := heap.Pop(&asksLimitOrderBook).(matcher.Level)
+				quantity := decimal.Zero
+				for _, order := range level.Order {
+					quantity = quantity.Add(order.OpenQuantity)
+				}
+				asks = append(asks, [2]string{level.Price.String(), quantity.String()})
 			}
-			bids = append(bids, [2]string{level.Price.String(), quantity.String()})
-		}
 
-		msg := Message{
-			Type:      "order_book",
-			Mode:      "snapshot",
-			FuturesID: "GC_SEP18",
-			Data: FuturesData{
-				Bids: bids,
-				Asks: asks,
-			},
+			bidsMarshaled, err := h.EtcdClient.Get(context.Background(), bidsKey)
+			if err != nil {
+				log.Fatalf("[broadcaster.hub.RunOrderBookWatcher] [FETAL] %s", err)
+			}
+			bidsLimitOrderBook := matcher.MaxHeap{}
+			json.Unmarshal([]byte(bidsMarshaled.Kvs[0].Value), &bidsLimitOrderBook)
+			var bids [][2]string
+			for bidsLimitOrderBook.Len() > 0 {
+				level := heap.Pop(&bidsLimitOrderBook).(matcher.Level)
+				quantity := decimal.Zero
+				for _, order := range level.Order {
+					quantity = quantity.Add(order.OpenQuantity)
+				}
+				bids = append(bids, [2]string{level.Price.String(), quantity.String()})
+			}
+
+			msg := Message{
+				Type:      "order_book",
+				Mode:      "snapshot",
+				FuturesID: "GC_SEP18",
+				Data: FuturesData{
+					Bids: bids,
+					Asks: asks,
+				},
+			}
+			h.broadcast <- msg
 		}
-		h.broadcast <- msg
 	}
 }
 
 func (h *Hub) RunTradeWatcher() {
 	etcdClient := mapper.NewEtcdClient()
 	defer etcdClient.Close()
-
-	key := strings.Replace(viper.GetString("etcd.keys.update"), "futures_id", "GC_SEP18", -1)
-	rch := etcdClient.Watch(context.Background(), key, clientv3.WithPrefix())
+	rch := etcdClient.Watch(context.Background(), viper.GetString("etcd.keys.update"), clientv3.WithPrefix())
 	for {
-		<-rch
-		marshaled, err := etcdClient.Get(context.Background(), key)
-		if err != nil {
-			log.Fatalf("[broadcaster.hub.RunTradeWatcher] [FETAL] %s", err)
+		wresp := <-rch
+
+		for _, event := range wresp.Events {
+			trade := model.Trade{}
+			json.Unmarshal([]byte(event.Kv.Value), &trade)
+			msg := Message{
+				Type:      "trade",
+				Mode:      "update",
+				FuturesID: "GC_SEP18",
+				Data: TradeData{
+					Price:    trade.Price.String(),
+					Quantity: trade.Quantity.String(),
+					Time:     trade.CreatedAt.String(),
+				},
+			}
+			h.broadcast <- msg
 		}
-		trade := model.Trade{}
-		json.Unmarshal([]byte(marshaled.Kvs[0].Value), &trade)
-		msg := Message{
-			Type:      "trade",
-			Mode:      "update",
-			FuturesID: "GC_SEP18",
-			Data: TradeData{
-				Price:    trade.Price.String(),
-				Quantity: trade.Quantity.String(),
-				Time:     trade.CreatedAt.String(),
-			},
-		}
-		h.broadcast <- msg
 	}
 }

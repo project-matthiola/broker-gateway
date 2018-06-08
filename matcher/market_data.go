@@ -147,7 +147,6 @@ Loop:
 // NewLimitOrder creates a new limit order.
 func (m *MarketData) NewLimitOrder(order model.Order) {
 	var peek *Level
-Loop:
 	for order.OpenQuantity.GreaterThan(decimal.Zero) {
 		switch enum.Side(order.Side) {
 		case enum.Side_BUY:
@@ -155,19 +154,19 @@ Loop:
 				heap.Push(m.bidsLimitOrderBook, Level{order.Price, []*model.Order{&order}})
 				service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_NEW))
 				m.BroadcastOrderBook()
-				break Loop
 			}
+			return
 		case enum.Side_SELL:
 			if !m.canMatch(order) {
 				heap.Push(m.asksLimitOrderBook, Level{order.Price, []*model.Order{&order}})
 				service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_NEW))
 				m.BroadcastOrderBook()
-				break Loop
 			}
+			return
 		default:
 			log.Print("matcher.matcher.NewLimitOrder [ERROR] Invalid order side.")
 			service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_REJECTED))
-			break Loop
+			return
 		}
 
 		price := peek.Order[0].Price

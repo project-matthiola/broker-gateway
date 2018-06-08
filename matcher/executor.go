@@ -48,7 +48,7 @@ func (e *Executor) NewTrade(initiator *model.Order, completion *model.Order, pri
 		log.Printf("[matcher.executor.NewTrade] [ERROR] %s", err)
 	}
 
-	key := strings.Replace(viper.GetString("etcd.keys.update"), "futures_id", trade.FuturesID, -1)
+	key := strings.Replace(viper.GetString("etcd.keys.trade"), "futures_id", trade.FuturesID, -1)
 	e.EtcdClient.Put(context.Background(), key, string(marshaled))
 	service.Order{}.SaveOrder(initiator)
 	service.Order{}.SaveOrder(completion)

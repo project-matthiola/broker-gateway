@@ -18,7 +18,7 @@ func (m *Mapper) FirstByID(model interface{}, id int) error {
 }
 
 func (m *Mapper) FirstByFirmName(model interface{}, firmName string) error {
-	return DB.Where("firm_name = ?", firmName).First(&model).Error
+	return DB.Where("firm_name = ?", firmName).First(model).Error
 }
 
 func (m *Mapper) Save(model interface{}) error {

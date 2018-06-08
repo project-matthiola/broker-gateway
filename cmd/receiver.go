@@ -8,6 +8,7 @@ import (
 
 	"github.com/micro/go-micro"
 	"github.com/quickfixgo/quickfix"
+	"github.com/rudeigerc/broker-gateway/mapper"
 	"github.com/rudeigerc/broker-gateway/receiver"
 	"github.com/spf13/cobra"
 )
@@ -34,7 +35,12 @@ var receiverCmd = &cobra.Command{
 		logFactory := quickfix.NewScreenLogFactory()
 
 		r := receiver.NewReceiver()
-		defer r.Stop()
+		mapper.NewDB()
+
+		defer func() {
+			r.Stop()
+			mapper.DB.Close()
+		}()
 
 		acceptor, err := quickfix.NewAcceptor(r, quickfix.NewMemoryStoreFactory(), appSettings, logFactory)
 		if err != nil {

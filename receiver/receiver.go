@@ -3,7 +3,6 @@ package receiver
 import (
 	"encoding/json"
 	"log"
-	"strconv"
 
 	"github.com/nsqio/go-nsq"
 	"github.com/quickfixgo/enum"
@@ -13,6 +12,7 @@ import (
 	"github.com/quickfixgo/fix50sp2/ordercancelrequest"
 	"github.com/quickfixgo/quickfix"
 	"github.com/rudeigerc/broker-gateway/model"
+	"github.com/rudeigerc/broker-gateway/service"
 	"github.com/satori/go.uuid"
 	"github.com/shopspring/decimal"
 	"github.com/spf13/viper"
@@ -83,7 +83,7 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 		return err
 	}
 
-	firmID, err := msg.GetSenderCompID()
+	firmName, err := msg.GetSenderCompID()
 	if err != nil {
 		return err
 	}
@@ -108,15 +108,14 @@ func (r *Receiver) OnNewOrderSingle(msg newordersingle.NewOrderSingle, sessionID
 		return err
 	}
 
-	firmIDInt, _ := strconv.Atoi(firmID)
-	orderID := uuid.NewV1()
+	firmID := service.Auth{}.FirmIDByName(firmName)
 
 	order := model.Order{
-		OrderID:      orderID,
+		OrderID:      uuid.NewV1(),
 		OrderType:    string(ordType),
 		Side:         string(side),
 		FuturesID:    futuresID,
-		FirmID:       firmIDInt,
+		FirmID:       firmID,
 		TraderName:   traderName,
 		Quantity:     quantity,
 		OpenQuantity: quantity,
