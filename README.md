@@ -1,6 +1,9 @@
 # broker-gateway
 
 [![Build Status](https://travis-ci.com/rudeigerc/broker-gateway.svg?token=m9esAaP4YUBsZ2yN5xJq&branch=master)](https://travis-ci.com/rudeigerc/broker-gateway)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rudeigerc/broker-gateway)](https://goreportcard.com/report/github.com/rudeigerc/broker-gateway)
+[![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/rudeigerc/broker-gateway)
+[![LICENSE](https://img.shields.io/github/license/rudeigerc/broker-gateway.svg)](https://github.com/rudeigerc/broker-gateway/blob/master/LICENSE)
 
 The broker gateway of project **Matthiola**, a distributed commodities OTC electronic trading system, instructed by Morgan Stanley. 
 
