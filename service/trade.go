@@ -76,8 +76,14 @@ func (t Trade) TradesWithCondition(firmID int, futuresID string, traderName stri
 	var (
 		trades []model.Trade
 		total  int
+		err    error
 	)
-	err := m.FindTradesWithCondition(&trades, firmID, futuresID, traderName, page, &total)
+	if firmID != -1 {
+		err = m.FindTradesWithCondition(&trades, firmID, futuresID, traderName, page, &total)
+	} else {
+		err = m.FindTrades(&trades, futuresID, traderName, page, &total)
+	}
+
 	if err != nil {
 		log.Printf("[service.trade.TradesWithCondition] [ERROR] %s", err)
 	}

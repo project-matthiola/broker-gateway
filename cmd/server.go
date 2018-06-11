@@ -37,6 +37,8 @@ var serverCmd = &cobra.Command{
 				admin.POST("/auth", handler.AdminAuthHandler)
 				admin.GET("/orders", handler.AdminOrderHandler)
 				admin.GET("/trades/*trade_id", handler.AdminTradeHandler)
+				admin.GET("/firms", handler.AdminFirmHandler)
+				admin.GET("/futures", handler.AdminFuturesHandler)
 			}
 
 			v1.GET("/orders", handler.OrderHandler)

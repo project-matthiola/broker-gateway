@@ -131,6 +131,15 @@ func AdminTradeHandler(c *gin.Context) {
 		return
 	}
 
+	firmID, err := strconv.Atoi(c.DefaultQuery("firm_id", "-1"))
+	if err != nil {
+		ErrorHandler(c, http.StatusBadRequest, "Invalid firm ID.")
+		return
+	}
+
+	futuresID := c.Query("futures_id")
+	traderName := c.Query("trader_name")
+
 	page, err := strconv.Atoi(c.DefaultQuery("page", "0"))
 	if err != nil {
 		ErrorHandler(c, http.StatusBadRequest, "Invalid page number.")
@@ -159,7 +168,7 @@ func AdminTradeHandler(c *gin.Context) {
 		}
 		c.JSON(http.StatusOK, gin.H{"data": response})
 	} else {
-		total, trades := service.Trade{}.TradesWithPage(page)
+		total, trades := service.Trade{}.TradesWithCondition(firmID, futuresID, traderName, page)
 		data := make([]TradeResponse, len(trades))
 		for index, trade := range trades {
 			response := TradeResponse{
@@ -188,4 +197,54 @@ func AdminTradeHandler(c *gin.Context) {
 			"page":  page,
 		})
 	}
+}
+
+func AdminFirmHandler(c *gin.Context) {
+	err := adminValidate(c)
+	if err != nil {
+		log.Print(err)
+		ErrorHandler(c, http.StatusUnauthorized, "Invalid token.")
+		return
+	}
+	firms := service.Firm{}.Firms()
+	c.JSON(http.StatusOK, gin.H{"data": firms})
+}
+
+type Children struct {
+	Value string `json:"value"`
+	Label string `json:"label"`
+}
+
+type FuturesResponse struct {
+	Value    string     `json:"value"`
+	Label    string     `json:"label"`
+	Children []Children `json:"children"`
+}
+
+func AdminFuturesHandler(c *gin.Context) {
+	err := adminValidate(c)
+	if err != nil {
+		log.Print(err)
+		ErrorHandler(c, http.StatusUnauthorized, "Invalid token.")
+		return
+	}
+	futures := service.Futures{}.Futures()
+
+	var data []FuturesResponse
+	for k, v := range futures {
+		var childrens []Children
+		for _, f := range v {
+			childrens = append(childrens, Children{
+				Value: f.FuturesID,
+				Label: f.FuturesID,
+			})
+		}
+		response := FuturesResponse{
+			Value:    k,
+			Label:    k,
+			Children: childrens,
+		}
+		data = append(data, response)
+	}
+	c.JSON(http.StatusOK, gin.H{"data": data})
 }
