@@ -45,7 +45,7 @@ func TradeHandler(c *gin.Context) {
 				Side:   tool.Convert(enum.Side(trade.CompletionSide)),
 				Trader: trade.CompletionName,
 			},
-			CreatedAt: trade.CreatedAt,
+			CreatedAt: trade.CreatedAt.String(),
 		}
 		data[index] = response
 	}

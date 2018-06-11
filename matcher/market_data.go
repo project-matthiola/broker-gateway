@@ -56,7 +56,7 @@ func (m *MarketData) canMatch(order model.Order) bool {
 		case enum.Side_BUY:
 			return m.asksLimitOrderBook.Len() != 0 && order.Price.GreaterThanOrEqual(m.asksLimitOrderBook.Peek().Price)
 		case enum.Side_SELL:
-			return m.bidsLimitOrderBook.Len() != 0 && order.Price.LessThanOrEqual(m.asksLimitOrderBook.Peek().Price)
+			return m.bidsLimitOrderBook.Len() != 0 && order.Price.LessThanOrEqual(m.bidsLimitOrderBook.Peek().Price)
 		}
 	}
 	return false
@@ -106,7 +106,7 @@ Loop:
 			order.Status = string(enum.OrdStatus_FILLED)
 
 			err := m.Executor.NewTrade(peek.Order[0], &order, price, quantity)
-			if err != nil {
+			if err == nil {
 				prevMarketPrice := m.marketPrice
 				m.marketPrice = peek.Order[0].Price
 				m.BroadcastOrderBook()
@@ -125,7 +125,7 @@ Loop:
 		peek.Order[0].Status = string(enum.OrdStatus_FILLED)
 
 		err := m.Executor.NewTrade(peek.Order[0], &order, price, quantity)
-		if err != nil {
+		if err == nil {
 			prevMarketPrice := m.marketPrice
 			m.marketPrice = peek.Order[0].Price
 			m.TriggerStopOrder(prevMarketPrice, m.marketPrice)
@@ -169,6 +169,26 @@ func (m *MarketData) NewLimitOrder(order model.Order) {
 			return
 		}
 
+		if peek.Order[0].OpenQuantity.GreaterThan(order.OpenQuantity) {
+			price := peek.Order[0].Price
+			quantity := order.OpenQuantity
+			// initiator
+			peek.Order[0].OpenQuantity = peek.Order[0].OpenQuantity.Sub(quantity)
+			peek.Order[0].Status = string(enum.OrdStatus_PARTIALLY_FILLED)
+			// completion
+			order.OpenQuantity = decimal.Zero
+			order.Status = string(enum.OrdStatus_FILLED)
+
+			err := m.Executor.NewTrade(peek.Order[0], &order, price, quantity)
+			if err == nil {
+				prevMarketPrice := m.marketPrice
+				m.marketPrice = peek.Order[0].Price
+				m.BroadcastOrderBook()
+				m.TriggerStopOrder(prevMarketPrice, m.marketPrice)
+			}
+			return
+		}
+
 		price := peek.Order[0].Price
 		quantity := peek.Order[0].OpenQuantity
 		// completion
@@ -179,7 +199,7 @@ func (m *MarketData) NewLimitOrder(order model.Order) {
 		peek.Order[0].Status = string(enum.OrdStatus_FILLED)
 
 		err := m.Executor.NewTrade(peek.Order[0], &order, price, quantity)
-		if err != nil {
+		if err == nil {
 			prevMarketPrice := m.marketPrice
 			m.marketPrice = peek.Order[0].Price
 			m.TriggerStopOrder(prevMarketPrice, m.marketPrice)
@@ -224,7 +244,6 @@ func (m *MarketData) NewCancelOrder(o model.Order) {
 	order := service.Order{}.OrderByID(o.OrderID.String())
 
 	if order.FuturesID == o.FuturesID {
-	OrdType:
 		switch enum.OrdType(order.OrderType) {
 		case enum.OrdType_STOP:
 			switch enum.Side(order.Side) {
@@ -240,10 +259,14 @@ func (m *MarketData) NewCancelOrder(o model.Order) {
 			case enum.Side_SELL:
 				err = m.asksStopOrderBook.Remove(order)
 			}
-			if err == nil {
-				break OrdType
+			if err != nil {
+				switch enum.Side(order.Side) {
+				case enum.Side_BUY:
+					err = m.bidsLimitOrderBook.Remove(order)
+				case enum.Side_SELL:
+					err = m.asksLimitOrderBook.Remove(order)
+				}
 			}
-			fallthrough
 		case enum.OrdType_LIMIT:
 			switch enum.Side(order.Side) {
 			case enum.Side_BUY:
@@ -258,7 +281,7 @@ func (m *MarketData) NewCancelOrder(o model.Order) {
 }
 
 func (m *MarketData) TriggerStopOrder(prev decimal.Decimal, current decimal.Decimal) {
-	if prev.GreaterThan(current) {
+	if prev.GreaterThan(current) && m.asksStopOrderBook.Len() != 0 {
 		for m.asksStopOrderBook.Peek().Price.GreaterThanOrEqual(current) {
 			for _, order := range heap.Pop(m.asksStopOrderBook).(Level).Order {
 				switch enum.OrdType(order.OrderType) {
@@ -267,9 +290,12 @@ func (m *MarketData) TriggerStopOrder(prev decimal.Decimal, current decimal.Deci
 				case enum.OrdType_STOP_LIMIT:
 					m.NewLimitOrder(*order)
 				}
+				if m.asksStopOrderBook.Len() == 0 {
+					return
+				}
 			}
 		}
-	} else if prev.LessThan(current) {
+	} else if prev.LessThan(current) && m.bidsStopOrderBook.Len() != 0 {
 		for m.bidsStopOrderBook.Peek().Price.LessThanOrEqual(current) {
 			for _, order := range heap.Pop(m.bidsStopOrderBook).(Level).Order {
 				switch enum.OrdType(order.OrderType) {
@@ -277,6 +303,9 @@ func (m *MarketData) TriggerStopOrder(prev decimal.Decimal, current decimal.Deci
 					m.NewMarketOrder(*order)
 				case enum.OrdType_STOP_LIMIT:
 					m.NewLimitOrder(*order)
+				}
+				if m.bidsStopOrderBook.Len() == 0 {
+					return
 				}
 			}
 		}

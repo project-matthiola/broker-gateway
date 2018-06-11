@@ -38,7 +38,6 @@ func (o Order) UpdateOrder(order *model.Order, column string, value string) {
 func (o Order) CancelOrder(order *model.Order) {
 	m := mapper.NewMapper()
 	err := m.Update(order, "status", string(enum.OrdStatus_CANCELED))
-	err = m.Delete(order)
 	if err != nil {
 		log.Printf("[service.order.CancelOrder] [ERROR] %s", err)
 	}

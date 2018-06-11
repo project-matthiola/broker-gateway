@@ -120,7 +120,7 @@ type TradeResponse struct {
 	FuturesID  string          `json:"futures_id"`
 	Initiator  Trader          `json:"initiator"`
 	Completion Trader          `json:"completion"`
-	CreatedAt  time.Time       `json:"trade_time"`
+	CreatedAt  string          `json:"trade_time"`
 }
 
 func AdminTradeHandler(c *gin.Context) {
@@ -155,7 +155,7 @@ func AdminTradeHandler(c *gin.Context) {
 				Side:   tool.Convert(enum.Side(trade.CompletionSide)),
 				Trader: trade.CompletionName,
 			},
-			CreatedAt: trade.CreatedAt,
+			CreatedAt: trade.CreatedAt.String(),
 		}
 		c.JSON(http.StatusOK, gin.H{"data": response})
 	} else {
@@ -177,7 +177,7 @@ func AdminTradeHandler(c *gin.Context) {
 					Side:   tool.Convert(enum.Side(trade.CompletionSide)),
 					Trader: trade.CompletionName,
 				},
-				CreatedAt: trade.CreatedAt,
+				CreatedAt: trade.CreatedAt.String(),
 			}
 			data[index] = response
 		}

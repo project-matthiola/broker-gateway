@@ -73,14 +73,14 @@ func (m *Mapper) FindTradesWithCondition(models interface{}, firmID int, futures
 		query = query.Where("futures_id = ?", futuresID)
 	}
 	if len(traderName) != 0 {
-		query = query.Where("initiator_name = ?", traderName).Or("completion_name = ?", traderName)
+		query = query.Where("initiator_name = ? OR completion_name = ?", traderName, traderName)
 	}
 
-	query.Where("initiator_id = ?", firmID).Or("completion_id = ?", firmID).Find(models).Count(total)
+	query.Where("initiator_id = ? OR completion_id = ?", firmID, firmID).Find(models).Count(total)
 	if page != 0 {
 		query = query.Limit(10).Offset((page - 1) * 10)
 	}
-	return query.Where("initiator_id = ?", firmID).Or("completion_id = ?", firmID).Order("created_at desc").Find(models).Error
+	return query.Where("initiator_id = ? OR completion_id = ?", firmID, firmID).Order("created_at desc").Find(models).Error
 }
 
 func (m *Mapper) FindOrdersWithCondition(models interface{}, firmID int, futuresID string, traderName string, status string, page int, total *int) error {

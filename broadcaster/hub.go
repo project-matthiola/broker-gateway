@@ -172,7 +172,7 @@ func (h *Hub) RunTradeWatcher() {
 				Data: TradeData{
 					Price:    trade.Price.String(),
 					Quantity: trade.Quantity.String(),
-					Time:     trade.CreatedAt.String(),
+					Time:     trade.CreatedAt.Format("2006-01-02 15:04:05 +0800 CST"),
 				},
 			}
 			h.broadcast <- msg

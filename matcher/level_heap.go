@@ -1,6 +1,7 @@
 package matcher
 
 import (
+	"container/heap"
 	"fmt"
 
 	"github.com/rudeigerc/broker-gateway/model"
@@ -50,6 +51,9 @@ func (h *LevelHeap) Remove(o model.Order) error {
 			for i, order := range level.Order {
 				if o.OrderID == order.OrderID {
 					(*h)[index].Order = append((*h)[index].Order[:i], (*h)[index].Order[i+1:]...)
+					if len((*h)[index].Order) == 0 {
+						heap.Remove(h, index)
+					}
 					return nil
 				}
 			}

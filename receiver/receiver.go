@@ -164,6 +164,9 @@ func (r *Receiver) OnOrderCancelRequest(msg ordercancelrequest.OrderCancelReques
 		FuturesID: symbol,
 	}
 
+	marshaled, _ := json.Marshal(order)
+	r.Publish(viper.GetString("nsq.topic"), marshaled)
+
 	log.Printf("[receiver.receiver.OnOrderCancelRequest] %v", order)
 
 	return nil
