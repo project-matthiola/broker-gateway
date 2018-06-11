@@ -42,16 +42,14 @@ func NewMarketData(futuresID string) *MarketData {
 
 func (m *MarketData) canMatch(order model.Order) bool {
 	switch enum.OrdType(order.OrderType) {
-	case enum.OrdType_MARKET:
+	case enum.OrdType_MARKET, enum.OrdType_STOP:
 		switch enum.Side(order.Side) {
 		case enum.Side_BUY:
 			return m.asksLimitOrderBook.Len() != 0
 		case enum.Side_SELL:
 			return m.bidsLimitOrderBook.Len() != 0
 		}
-	case enum.OrdType_STOP, enum.OrdType_STOP_LIMIT:
-		return false
-	case enum.OrdType_LIMIT:
+	case enum.OrdType_LIMIT, enum.OrdType_STOP_LIMIT:
 		switch enum.Side(order.Side) {
 		case enum.Side_BUY:
 			return m.asksLimitOrderBook.Len() != 0 && order.Price.GreaterThanOrEqual(m.asksLimitOrderBook.Peek().Price)
@@ -147,6 +145,7 @@ Loop:
 // NewLimitOrder creates a new limit order.
 func (m *MarketData) NewLimitOrder(order model.Order) {
 	var peek *Level
+Loop:
 	for order.OpenQuantity.GreaterThan(decimal.Zero) {
 		switch enum.Side(order.Side) {
 		case enum.Side_BUY:
@@ -155,18 +154,18 @@ func (m *MarketData) NewLimitOrder(order model.Order) {
 				service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_NEW))
 				m.BroadcastOrderBook()
 			}
-			return
+			break Loop
 		case enum.Side_SELL:
 			if !m.canMatch(order) {
 				heap.Push(m.asksLimitOrderBook, Level{order.Price, []*model.Order{&order}})
 				service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_NEW))
 				m.BroadcastOrderBook()
 			}
-			return
+			break Loop
 		default:
 			log.Print("matcher.matcher.NewLimitOrder [ERROR] Invalid order side.")
 			service.Order{}.UpdateOrder(&order, "status", string(enum.OrdStatus_REJECTED))
-			return
+			break Loop
 		}
 
 		if peek.Order[0].OpenQuantity.GreaterThan(order.OpenQuantity) {
@@ -186,7 +185,7 @@ func (m *MarketData) NewLimitOrder(order model.Order) {
 				m.BroadcastOrderBook()
 				m.TriggerStopOrder(prevMarketPrice, m.marketPrice)
 			}
-			return
+			break Loop
 		}
 
 		price := peek.Order[0].Price
