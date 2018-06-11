@@ -84,9 +84,14 @@ func (o Order) OrdersWithCondition(firmID int, futuresID string, traderName stri
 	var (
 		orders []model.Order
 		total  int
+		err    error
 	)
+	if firmID != -1 {
+		err = m.FindOrdersWithCondition(&orders, firmID, futuresID, traderName, status, page, &total)
+	} else {
+		err = m.FindOrders(&orders, futuresID, traderName, status, page, &total)
+	}
 
-	err := m.FindOrdersWithCondition(&orders, firmID, futuresID, traderName, status, page, &total)
 	if err != nil {
 		log.Printf("[service.trade.OrdersWithCondition] [ERROR] %s", err)
 	}

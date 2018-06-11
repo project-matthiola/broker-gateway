@@ -73,19 +73,29 @@ func AdminOrderHandler(c *gin.Context) {
 		return
 	}
 
+	firmID, err := strconv.Atoi(c.DefaultQuery("firm_id", "-1"))
+	if err != nil {
+		ErrorHandler(c, http.StatusBadRequest, "Invalid firm ID.")
+		return
+	}
+
+	futuresID := c.Query("futures_id")
+	traderName := c.Query("trader_name")
+	status := c.Query("status")
+
 	page, err := strconv.Atoi(c.DefaultQuery("page", "0"))
 	if err != nil {
 		ErrorHandler(c, http.StatusBadRequest, "Invalid page number.")
 		return
 	}
 
-	total, orders := service.Order{}.OrdersWithPage(page)
+	total, orders := service.Order{}.OrdersWithCondition(firmID, futuresID, traderName, status, page)
 	data := make([]OrderResponse, len(orders))
 	for index, order := range orders {
 		response := OrderResponse{
 			OrderID:      order.OrderID,
-			OrderType:    tool.Convert(order.OrderType),
-			Side:         tool.Convert(order.Side),
+			OrderType:    tool.Convert(enum.OrdType(order.OrderType)),
+			Side:         tool.Convert(enum.Side(order.Side)),
 			FuturesID:    order.FuturesID,
 			Firm:         service.Auth{}.FirmNameByID(order.FirmID),
 			TraderName:   order.TraderName,
@@ -93,7 +103,7 @@ func AdminOrderHandler(c *gin.Context) {
 			OpenQuantity: order.OpenQuantity.String(),
 			Price:        order.Price.String(),
 			StopPrice:    order.StopPrice.String(),
-			Status:       tool.Convert(order.Status),
+			Status:       tool.Convert(enum.OrdStatus(order.Status)),
 			CreatedAt:    order.CreatedAt.String(),
 			UpdatedAt:    order.UpdatedAt.String(),
 		}

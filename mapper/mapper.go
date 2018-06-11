@@ -137,3 +137,22 @@ func (m *Mapper) FindOrdersWithCondition(models interface{}, firmID int, futures
 	}
 	return query.Where("firm_id = ?", firmID).Order("updated_at desc").Find(models).Error
 }
+
+func (m *Mapper) FindOrders(models interface{}, futuresID string, traderName string, status string, page int, total *int) error {
+	query := DB
+	if len(futuresID) != 0 {
+		query = query.Where("futures_id = ?", futuresID)
+	}
+	if len(traderName) != 0 {
+		query = query.Where("trader_name = ?", traderName)
+	}
+	if len(status) != 0 {
+		query = query.Where("status = ?", status)
+	}
+
+	query.Find(models).Count(total)
+	if page != 0 {
+		query = query.Limit(10).Offset((page - 1) * 10)
+	}
+	return query.Order("updated_at desc").Find(models).Error
+}
