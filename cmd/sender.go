@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"log"
+	"math/rand"
 	"os"
 	"path"
 	"time"
@@ -52,7 +53,24 @@ var senderCmd = &cobra.Command{
 		initiator.Start()
 		defer initiator.Stop()
 
-		for {
+		for buy := decimal.NewFromFloat(49.50); buy.LessThanOrEqual(decimal.NewFromFloat(49.99)); buy = buy.Add(decimal.NewFromFloat(0.01)) {
+			clOrdID := field.NewClOrdID(uuid.NewV1().String())
+			side := field.NewSide(enum.Side_BUY)
+			transacttime := field.NewTransactTime(time.Now())
+			ordtype := field.NewOrdType(enum.OrdType_LIMIT)
+
+			order := newordersingle.New(clOrdID, side, transacttime, ordtype)
+			order.SetSenderCompID("Sender")
+			order.SetSenderSubID("Rudeiger Cheng")
+			order.SetTargetCompID("Broker")
+			order.SetSymbol("GC_SEP18")
+			order.SetPrice(buy, 2)
+			order.SetOrderQty(decimal.NewFromFloat(1000).Div(buy).Mul(decimal.NewFromFloat(rand.Float64())), 2)
+			msg := order.ToMessage()
+			quickfix.Send(msg)
+		}
+
+		for sell := decimal.NewFromFloat(50.41); sell.GreaterThanOrEqual(decimal.NewFromFloat(50.00)); sell = sell.Sub(decimal.NewFromFloat(0.01)) {
 			clOrdID := field.NewClOrdID(uuid.NewV1().String())
 			side := field.NewSide(enum.Side_SELL)
 			transacttime := field.NewTransactTime(time.Now())
@@ -60,59 +78,13 @@ var senderCmd = &cobra.Command{
 
 			order := newordersingle.New(clOrdID, side, transacttime, ordtype)
 			order.SetSenderCompID("Sender")
-			order.SetSenderSubID("John Doe")
+			order.SetSenderSubID("Rudeiger Cheng")
 			order.SetTargetCompID("Broker")
 			order.SetSymbol("GC_SEP18")
-			order.SetPrice(decimal.NewFromFloat(50.01), 2)
-			order.SetOrderQty(decimal.NewFromFloat(14.21), 2)
+			order.SetPrice(sell, 2)
+			order.SetOrderQty(decimal.NewFromFloat(1000).Div(sell).Mul(decimal.NewFromFloat(rand.Float64())), 2)
 			msg := order.ToMessage()
 			quickfix.Send(msg)
-
-			clOrdID = field.NewClOrdID(uuid.NewV1().String())
-			side = field.NewSide(enum.Side_SELL)
-			transacttime = field.NewTransactTime(time.Now())
-			ordtype = field.NewOrdType(enum.OrdType_LIMIT)
-
-			order = newordersingle.New(clOrdID, side, transacttime, ordtype)
-			order.SetSenderCompID("Sender")
-			order.SetSenderSubID("John Doe")
-			order.SetTargetCompID("Broker")
-			order.SetSymbol("GC_SEP18")
-			order.SetPrice(decimal.NewFromFloat(50.00), 2)
-			order.SetOrderQty(decimal.NewFromFloat(23.14), 2)
-			msg = order.ToMessage()
-			quickfix.Send(msg)
-
-			clOrdID = field.NewClOrdID(uuid.NewV1().String())
-			side = field.NewSide(enum.Side_BUY)
-			transacttime = field.NewTransactTime(time.Now())
-			ordtype = field.NewOrdType(enum.OrdType_LIMIT)
-
-			order = newordersingle.New(clOrdID, side, transacttime, ordtype)
-			order.SetSenderCompID("Sender")
-			order.SetSenderSubID("John Doe")
-			order.SetTargetCompID("Broker")
-			order.SetSymbol("GC_SEP18")
-			order.SetPrice(decimal.NewFromFloat(49.99), 2)
-			order.SetOrderQty(decimal.NewFromFloat(26.79), 2)
-			msg = order.ToMessage()
-			quickfix.Send(msg)
-
-			clOrdID = field.NewClOrdID(uuid.NewV1().String())
-			side = field.NewSide(enum.Side_BUY)
-			transacttime = field.NewTransactTime(time.Now())
-			ordtype = field.NewOrdType(enum.OrdType_MARKET)
-
-			order = newordersingle.New(clOrdID, side, transacttime, ordtype)
-			order.SetSenderCompID("Sender")
-			order.SetSenderSubID("John Doe")
-			order.SetTargetCompID("Broker")
-			order.SetSymbol("GC_SEP18")
-			order.SetOrderQty(decimal.NewFromFloat(10.00), 2)
-			msg = order.ToMessage()
-			quickfix.Send(msg)
-
-			break
 		}
 
 		service := micro.NewService(
